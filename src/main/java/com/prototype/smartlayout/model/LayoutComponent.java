@@ -1,7 +1,5 @@
 package com.prototype.smartlayout.model;
 
-import java.util.Vector;
-
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 
@@ -10,11 +8,9 @@ import com.prototype.smartlayout.model.enums.ComponentDimensionEnum;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.log4j.Log4j2;
 
 @Getter
 @Setter
-@Log4j2
 public class LayoutComponent implements Layoutable
 {
 	private final JComponent jcomponent;
@@ -42,10 +38,10 @@ public class LayoutComponent implements Layoutable
 	}
 	
 	@Override
-	public Vector<WidthHeightRange> GetRanges()
+	public ExtendedArray<WidthHeightRange> GetRanges(int width, int height)
 	{
-		Vector<WidthHeightRange> vec = new Vector<>();
-		vec.add(widthHeightRange);
+		ExtendedArray<WidthHeightRange> vec = new ExtendedArray<WidthHeightRange>(WidthHeightRange.class, 1);
+		vec.set(widthHeightRange, 0);
 		
 		return vec;
 	}
@@ -225,6 +221,40 @@ public class LayoutComponent implements Layoutable
 		return newValues;
 	}
 	
+	/*private boolean ControlLayoutProcess(WidthHeightRange range, int width, int height)
+	{
+		boolean fillerNeed = range.TestFillerNeed(width, height);
+		boolean verticalScrollNeed = range.TestVerticalScrollNeed(height);
+		boolean horizontalScrollNeed = range.TestHorizontalScrollNeed(width);
+		
+		switch(SmartLayout.app.process)
+		{
+		case FEASIBLE:
+			
+			return range.TestFeasiblity(width, height) && !range.isHasFiller();
+			
+		case FILLER:
+			
+			return fillerNeed && !(verticalScrollNeed || horizontalScrollNeed);
+			
+		case VERTICAL_SCROLL:
+			
+			return verticalScrollNeed && !horizontalScrollNeed;
+			
+		case HORIZONTAL_SCROLL:
+			
+			return !verticalScrollNeed && horizontalScrollNeed;
+			
+		case NO_PREFERENCE:
+			
+			return true;
+			
+		default:
+			
+			return false;
+		}
+	}*/
+	
 	@Override
 	public void Print(int index)
 	{
@@ -234,126 +264,5 @@ public class LayoutComponent implements Layoutable
 		}
 		
 		System.out.print(label + "\n");
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
-	private boolean isFeasible;
-	
-
-	public LayoutComponent (String name, WidthHeightRange widthHeightRange) {
-		label = name;
-		assignedX = 0;
-		assignedY = 0;
-		this.widthHeightRange = widthHeightRange;
-		assignedWidth = widthHeightRange.getMinWidth();
-		assignedHeight = widthHeightRange.getMinHeight();
-		jcomponent = null;
-	}
-
-	public void setPosition (int xVal, int yVal) {
-		setAssignedX(xVal);
-		setAssignedY(yVal);
-	}
-
-	public void setSize (int width, int height) {
-		if (width > widthHeightRange.getMaxWidth()
-				|| width < widthHeightRange.getMinWidth()
-				|| height > widthHeightRange.getMaxHeight()
-				|| height < widthHeightRange.getMinHeight()) {
-			log.error("invalid setSize: (" + width + "," + height + ") on " + widthHeightRange);
-		}
-		setAssignedWidth(width);
-		setAssignedHeight(height);
-	}
-
-	@Override
-	public String toString () {
-		return "['"
-				//+ label
-				+ "'("
-				+ assignedX
-				+ ","
-				+ assignedY
-				+ ")."
-				+ "("
-				+ assignedWidth
-				+ ","
-				+ assignedHeight
-				+ ") < "
-				+ widthHeightRange
-				+ " >]";
-	}
-
-	/**
-	 * For a component, this method returns the associated WidthHeightRange object.
-	 *
-	 * @return The associated WidthHeightRange object.
-	 */
-	@Override
-	public Vector<WidthHeightRange> getRanges () {
-		Vector<WidthHeightRange> vec = new Vector<>();
-		vec.add(widthHeightRange);
-		return vec;
-	}
-
-	@Override
-	public boolean layout (int x, int y, int w, int h, WidthHeightRange whr) {
-		// This is the main method that does the computation of layout
-		setAssignedX(x);
-		setAssignedY(y);
-//		if (w < whr.getMinWidth()) {
-//			setAssignedWidth(whr.getMinWidth());
-//		} else if (w > whr.getMaxWidth()) {
-//			setAssignedWidth(whr.getMaxWidth());
-//		} else {
-//			setAssignedWidth(w);
-//		}
-//		if (h < whr.getMinHeight()) {
-//			setAssignedHeight(whr.getMinHeight());
-//		} else if (h > whr.getMaxHeight()) {
-//			setAssignedHeight(whr.getMaxHeight());
-//		} else {
-//			setAssignedHeight(h);
-//		}
-
-		setAssignedWidth(w);
-		setAssignedHeight(h);
-
-		setFeasible(w >= whr.getMinWidth() && w <= whr.getMaxWidth() && h >= whr.getMinHeight() && h <= whr.getMaxHeight());
-//		log.debug(label + " - X: " + x + " Y: "+ y + " Width: " + w + " Height: " + h);
-		return isFeasible;
 	}
 }

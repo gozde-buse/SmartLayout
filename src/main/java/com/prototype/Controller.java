@@ -36,7 +36,7 @@ public class Controller extends JFrame
 		controller.CreateControlPanel();
 		
 		test = new TestScenario();
-		controller.layout = test.SchengenVisaApplicationForm();
+		controller.layout = test.SchengenVisa51CompApplicationForm();
 	}
 	
 	private void CreateControlPanel()
@@ -199,7 +199,7 @@ public class Controller extends JFrame
 		
 		for(int i = 0; i < SmartLayout.app.comboBoxLayouts.length; i++)
 		{
-			layoutComboBox.addItem(SmartLayout.app.comboBoxLayouts[i]);
+			layoutComboBox.addItem(SmartLayout.app.comboBoxLayouts.get(i));
 		}
 		
 		layoutComboBox.setSelectedIndex(SmartLayout.app.comboBoxSelectedId);

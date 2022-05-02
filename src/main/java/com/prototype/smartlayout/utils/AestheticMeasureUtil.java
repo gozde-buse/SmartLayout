@@ -70,9 +70,9 @@ public class AestheticMeasureUtil
 	
 	public static float MeasureAesthetics(int frameWidth, int frameHeight, int layoutWidth, int layoutHeight)
 	{
-		return 1;
+		//return 1;
 		
-		/*aestheticMeasure = new AestheticMeasureUtil();
+		aestheticMeasure = new AestheticMeasureUtil();
 		
 		aestheticMeasure.componentSize = SmartLayout.components.size();
 		
@@ -107,7 +107,7 @@ public class AestheticMeasureUtil
 		
 		float m_orderAndComplexity = aestheticMeasure.MeasureOrderAndComplexity(measurements, aestheticMeasure.coefficients);
 		
-		return m_orderAndComplexity;*/
+		return m_orderAndComplexity;
 	}
 	
 	private float MeasureBalance()
@@ -131,7 +131,7 @@ public class AestheticMeasureUtil
 		
 		balance = 1 - (Math.abs(bm_vertical) + Math.abs(bm_horizontal)) / 2;
 		
-		System.out.println("Balance: " + balance);
+		//System.out.println("Balance: " + balance);
 		
 		return balance;
 	}
@@ -155,7 +155,7 @@ public class AestheticMeasureUtil
 		
 		equilibrium = 1 - (Math.abs(em_x) + Math.abs(em_y)) / 2;
 		
-		System.out.println("Equilibrium: " + equilibrium);
+		//System.out.println("Equilibrium: " + equilibrium);
 		
 		return equilibrium;
 	}
@@ -252,7 +252,7 @@ public class AestheticMeasureUtil
 		
 		symmetry = 1 - (Math.abs(sym_v) + Math.abs(sym_h) + Math.abs(sym_r)) / 3;
 		
-		System.out.println("Symmetry: " + symmetry);
+		//System.out.println("Symmetry: " + symmetry);
 		
 		return symmetry;
 	}
@@ -320,7 +320,7 @@ public class AestheticMeasureUtil
 		
 		sequence = 1 - subTotal / 8;
 		
-		System.out.println("Sequence: " + sequence);
+		//System.out.println("Sequence: " + sequence);
 		
 		return sequence;
 	}
@@ -383,7 +383,7 @@ public class AestheticMeasureUtil
 		
 		cohesion = (Math.abs(cm_fl) + Math.abs(cm_fo) + Math.abs(cm_lo)) / 3;
 		
-		System.out.println("Cohesion: " + cohesion);
+		//System.out.println("Cohesion: " + cohesion);
 		
 		return cohesion;
 	}
@@ -426,14 +426,16 @@ public class AestheticMeasureUtil
 		for(ComponentData data: datas)
 			totalAreas += data.getTotalArea();
 		
-		um_space = 1 - ((layoutWidth * layoutHeight - totalAreas) / (frameWidth * frameHeight - totalAreas));
+		if(frameWidth * frameHeight == totalAreas)
+			um_space = 1;
+		else
+			um_space = 1 - ((layoutWidth * layoutHeight - totalAreas) / (frameWidth * frameHeight - totalAreas));
 		
 		unity = (Math.abs(um_form) + Math.abs(um_space)) / 2;
 		
-		System.out.println("Unity: " + unity);
+		//System.out.println("Unity: " + unity);
 		
-		//return unity;
-		return 0;
+		return unity;
 	}
 	
 	private float MeasureProportion()
@@ -484,7 +486,7 @@ public class AestheticMeasureUtil
 		
 		proportion = (Math.abs(pm_layout) + Math.abs(pm_object)) / 2;
 		
-		System.out.println("Proportion: " + proportion);
+		//System.out.println("Proportion: " + proportion);
 		
 		return proportion;
 	}
@@ -526,7 +528,7 @@ public class AestheticMeasureUtil
 		
 		simplicity = 3 / (n_vap + n_hap + n);
 		
-		System.out.println("Simplicity: " + simplicity);
+		//System.out.println("Simplicity: " + simplicity);
 		
 		return simplicity;
 	}
@@ -539,9 +541,9 @@ public class AestheticMeasureUtil
 		for(ComponentData data: datas)
 			totalAreas += data.getTotalArea();
 		
-		density = 1 - totalAreas / (frameWidth * frameHeight);
+		density = 1 - totalAreas / (layoutWidth * layoutHeight);
 		
-		System.out.println("Density: " + density);
+		//System.out.println("Density: " + density);
 		
 		return density;
 	}
@@ -601,7 +603,7 @@ public class AestheticMeasureUtil
 		
 		regularity = (Math.abs(rm_alignment) + Math.abs(rm_spacing)) / 2;
 		
-		System.out.println("Regularity: " + regularity);
+		//System.out.println("Regularity: " + regularity);
 		
 		return regularity;
 	}
@@ -637,7 +639,7 @@ public class AestheticMeasureUtil
 		
 		economy = 1 / sizeCount;
 		
-		System.out.println("Economy: " + economy);
+		//System.out.println("Economy: " + economy);
 		
 		return economy;
 	}
@@ -668,7 +670,7 @@ public class AestheticMeasureUtil
 		
 		homogeneity = w / w_max;
 		
-		System.out.println("Homogeneity: " + homogeneity);
+		//System.out.println("Homogeneity: " + homogeneity);
 		
 		return homogeneity;
 	}
@@ -750,7 +752,7 @@ public class AestheticMeasureUtil
 		
 		rhythm = 1 - (Math.abs(rhm_x) + Math.abs(rhm_y) + Math.abs(rhm_a)) / 3;
 		
-		System.out.println("Rhythm: " + rhythm);
+		//System.out.println("Rhythm: " + rhythm);
 		
 		return rhythm;
 	}
@@ -769,7 +771,7 @@ public class AestheticMeasureUtil
 		
 		orderAndComplexity = measurementSum / coefficentSum;
 		
-		System.out.println("Order and Complexity: " + orderAndComplexity + "\n");
+		//System.out.println("Order and Complexity: " + orderAndComplexity + "\n");
 		
 		return orderAndComplexity;
 	}
