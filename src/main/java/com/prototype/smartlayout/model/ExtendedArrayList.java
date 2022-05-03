@@ -115,4 +115,12 @@ public class ExtendedArrayList<T>
 		
 		return mergedArrayList;
 	}
+	
+	public void MakeArrayListOf(ExtendedArrayList<T> arrayList)
+	{
+		clear();
+		
+		for(long i = 0; i < arrayList.length; i++)
+			add(arrayList.get(i));
+	}
 }

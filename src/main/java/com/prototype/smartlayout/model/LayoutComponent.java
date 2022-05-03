@@ -38,12 +38,15 @@ public class LayoutComponent implements Layoutable
 	}
 	
 	@Override
-	public ExtendedArray<WidthHeightRange> GetRanges(int width, int height)
+	public ExtendedArray<WidthHeightRange> GetRanges()
 	{
 		ExtendedArray<WidthHeightRange> vec = new ExtendedArray<WidthHeightRange>(WidthHeightRange.class, 1);
 		vec.set(widthHeightRange, 0);
 		
-		return vec;
+		if(Control(vec.get(0)))
+			return vec;
+		
+		return null;
 	}
 
 	@Override
@@ -221,29 +224,31 @@ public class LayoutComponent implements Layoutable
 		return newValues;
 	}
 	
-	/*private boolean ControlLayoutProcess(WidthHeightRange range, int width, int height)
+	private boolean Control(WidthHeightRange range)
 	{
-		boolean fillerNeed = range.TestFillerNeed(width, height);
+		int width = SmartLayout.app.width;
+		int height = SmartLayout.app.height;
+		
 		boolean verticalScrollNeed = range.TestVerticalScrollNeed(height);
 		boolean horizontalScrollNeed = range.TestHorizontalScrollNeed(width);
 		
-		switch(SmartLayout.app.process)
+		switch(SmartLayout.app.processType)
 		{
 		case FEASIBLE:
 			
-			return range.TestFeasiblity(width, height) && !range.isHasFiller();
+			return !range.isHasFiller();
 			
 		case FILLER:
 			
-			return fillerNeed && !(verticalScrollNeed || horizontalScrollNeed);
+			return !verticalScrollNeed && !horizontalScrollNeed;
 			
 		case VERTICAL_SCROLL:
 			
-			return verticalScrollNeed && !horizontalScrollNeed;
+			return !horizontalScrollNeed;
 			
 		case HORIZONTAL_SCROLL:
 			
-			return !verticalScrollNeed && horizontalScrollNeed;
+			return !verticalScrollNeed;
 			
 		case NO_PREFERENCE:
 			
@@ -253,7 +258,7 @@ public class LayoutComponent implements Layoutable
 			
 			return false;
 		}
-	}*/
+	}
 	
 	@Override
 	public void Print(int index)

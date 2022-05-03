@@ -1,7 +1,7 @@
 package com.prototype.smartlayout.model;
 
 public interface Layoutable {
-	ExtendedArray<WidthHeightRange> GetRanges(int width, int height);
+	ExtendedArray<WidthHeightRange> GetRanges();
 	
 	void GetFinalLayout (int x, int y, int w, int h, WidthHeightRange whr);
 	

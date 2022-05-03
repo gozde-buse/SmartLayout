@@ -1,5 +1,6 @@
 package com.prototype.smartlayout.model;
 
+import com.prototype.smartlayout.SmartLayout;
 import com.prototype.smartlayout.model.enums.OrientationEnum;
 import com.prototype.smartlayout.utils.ArrayIndexComparator;
 
@@ -13,8 +14,10 @@ public class LayoutContainer implements Layoutable
 {
 	private final String label;
 	private final Layoutable[] children;
-	private ExtendedArray<WidthHeightRange> memory;
 	private LayoutContainer parent;
+	
+	private boolean isMemoryFull = false;
+	private ExtendedArray<WidthHeightRange> memory;
 	
 	private int assignedX;
 	private int assignedY;
@@ -32,8 +35,11 @@ public class LayoutContainer implements Layoutable
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public ExtendedArray<WidthHeightRange> GetRanges(int width, int height)
+	public ExtendedArray<WidthHeightRange> GetRanges()
 	{
+		if(isMemoryFull)
+			return memory;
+		
 		long rangeSize = 1;
 		int childSize = children.length;
 		ExtendedArray<WidthHeightRange>[] childRanges = new ExtendedArray[childSize];
@@ -41,14 +47,21 @@ public class LayoutContainer implements Layoutable
 		long[] maxIndices;
 		currentIndices = new int[childSize];
 		maxIndices = new long[childSize];
+		boolean allNull = true;
 		
 		for (int i = 0; i < children.length; i++)
 		{
-			childRanges[i] = children[i].GetRanges(width, height);
+			childRanges[i] = children[i].GetRanges();
+			
+			if(childRanges[i] == null)
+				return null;
+			
 			rangeSize *= childRanges[i].length;
 			maxIndices[i] = childRanges[i].length;
 			currentIndices[i] = 0;
 		}
+		
+		isMemoryFull = true;
 		
 		ArrayIndexComparator comparator = new ArrayIndexComparator(maxIndices);
 		Integer[] sortedIndices = comparator.createIndexArray();
@@ -61,64 +74,108 @@ public class LayoutContainer implements Layoutable
 		
 		for(int i = 0; i < rangeSize; i++)
 		{
-			int minWidthH, maxWidthH, minHeightH, maxHeightH;
-			int minWidthV, maxWidthV, minHeightV, maxHeightV;
-			
-			minWidthH = maxWidthH = minHeightH = 0;
-			maxHeightH = Integer.MAX_VALUE;
-			
-			minWidthV = maxHeightV = minHeightV = 0;
-			maxWidthV = Integer.MAX_VALUE;
-			
-			WidthHeightRange tempRangeH = new WidthHeightRange();
-			WidthHeightRange tempRangeV = new WidthHeightRange();
-			tempRangeH.CreateSubRangeValues(childSize);
-			tempRangeV.CreateSubRangeValues(childSize);
-			
-			for(int j = 0; j < childSize; j++)
+			if(memory != null && memory.get(i) != null && memory.get(i + rangeSize) != null)
 			{
-				WidthHeightRange childRange = childRanges[j].get(currentIndices[j]);
-				
-				minWidthH += childRange.getMinWidth();
-				maxWidthH += childRange.getMaxWidth();
-				minHeightH = Math.max(minHeightH, childRange.getMinHeight());
-				maxHeightH = Math.min(maxHeightH, childRange.getMaxHeight());
-
-				if (maxHeightH < minHeightH)
-				{
-					maxHeightH = minHeightH;
-					tempRangeH.setHasFiller(true);
-				}
-				
-				tempRangeH.AddSubRangeValues(j, childRange);
-				
-				minWidthV = Math.max(minWidthV, childRange.getMinWidth());
-				maxWidthV = Math.min(maxWidthV, childRange.getMaxWidth());
-				minHeightV += childRange.getMinHeight();
-				maxHeightV += childRange.getMaxHeight();
-
-				if (maxWidthV < minWidthV)
-				{
-					maxWidthV = minWidthV;
-					tempRangeV.setHasFiller(true);
-				}
-				
-				tempRangeV.AddSubRangeValues(j, childRange);
-				
-				if(childRange.isHasFiller())
-				{
-					tempRangeH.setHasFiller(true);
-					tempRangeV.setHasFiller(true);
-				}
+				rangesH.set(memory.get(i), i);
+				rangesV.set(memory.get(i + rangeSize), i);
+				allNull = false;
 			}
-			
-			WidthHeightRange rangeH = new WidthHeightRange(minWidthH, maxWidthH, minHeightH, maxHeightH, OrientationEnum.HORIZONTAL);
-			rangeH.AddAllSubRangeValues(tempRangeH);
-			rangesH.set(rangeH, i);
+			else
+			{
+				int minWidthH, maxWidthH, minHeightH, maxHeightH;
+				int minWidthV, maxWidthV, minHeightV, maxHeightV;
+				
+				minWidthH = maxWidthH = minHeightH = 0;
+				maxHeightH = Integer.MAX_VALUE;
+				
+				minWidthV = maxHeightV = minHeightV = 0;
+				maxWidthV = Integer.MAX_VALUE;
+				
+				WidthHeightRange tempRangeH = new WidthHeightRange();
+				WidthHeightRange tempRangeV = new WidthHeightRange();
+				tempRangeH.CreateSubRangeValues(childSize);
+				tempRangeV.CreateSubRangeValues(childSize);
+				
+				for(int j = 0; j < childSize; j++)
+				{
+					WidthHeightRange childRange = childRanges[j].get(currentIndices[j]);
+					
+					if(childRange == null)
+					{
+						tempRangeH = null;
+						tempRangeV = null;
+						isMemoryFull = false;
+						
+						break;
+					}
+					
+					minWidthH += childRange.getMinWidth();
+					maxWidthH += childRange.getMaxWidth();
+					minHeightH = Math.max(minHeightH, childRange.getMinHeight());
+					maxHeightH = Math.min(maxHeightH, childRange.getMaxHeight());
 
-			WidthHeightRange rangeV = new WidthHeightRange(minWidthV, maxWidthV, minHeightV, maxHeightV, OrientationEnum.VERTICAL);
-			rangeV.AddAllSubRangeValues(tempRangeV);
-			rangesV.set(rangeV, i);
+					if (maxHeightH < minHeightH)
+					{
+						maxHeightH = minHeightH;
+						tempRangeH.setHasFiller(true);
+					}
+					
+					tempRangeH.AddSubRangeValues(j, childRange);
+					
+					minWidthV = Math.max(minWidthV, childRange.getMinWidth());
+					maxWidthV = Math.min(maxWidthV, childRange.getMaxWidth());
+					minHeightV += childRange.getMinHeight();
+					maxHeightV += childRange.getMaxHeight();
+
+					if (maxWidthV < minWidthV)
+					{
+						maxWidthV = minWidthV;
+						tempRangeV.setHasFiller(true);
+					}
+					
+					tempRangeV.AddSubRangeValues(j, childRange);
+					
+					if(childRange.isHasFiller())
+					{
+						tempRangeH.setHasFiller(true);
+						tempRangeV.setHasFiller(true);
+					}
+				}
+				
+				if(tempRangeH != null)
+				{
+					WidthHeightRange rangeH = new WidthHeightRange(minWidthH, maxWidthH, minHeightH, maxHeightH, OrientationEnum.HORIZONTAL);
+					rangeH.AddAllSubRangeValues(tempRangeH);
+					rangeH.setHasFiller(tempRangeH.isHasFiller());
+					
+					if(Control(rangeH))
+					{
+						rangesH.set(rangeH, i);
+						allNull = false;
+					}
+					else
+						rangesH.set(null, i);
+				}
+				else
+					rangesH.set(null, i);
+
+				if(tempRangeV != null)
+				{
+					WidthHeightRange rangeV = new WidthHeightRange(minWidthV, maxWidthV, minHeightV, maxHeightV, OrientationEnum.VERTICAL);
+					rangeV.AddAllSubRangeValues(tempRangeV);
+					rangeV.setHasFiller(tempRangeV.isHasFiller());
+					
+					if(Control(rangeV))
+					{
+						rangesV.set(rangeV, i);
+						allNull = false;
+					}
+					else
+						rangesV.set(null, i);
+				}
+				else
+					rangesV.set(null, i);
+			}
 
 			currentIndices[sortedIndices[pivot]]++;
 			
@@ -152,6 +209,10 @@ public class LayoutContainer implements Layoutable
 
 		ExtendedArray<WidthHeightRange> ranges = new ExtendedArray<WidthHeightRange>(WidthHeightRange.class, rangeSize * 2);
 		ranges = rangesH.Merge(rangesH, rangesV);
+		memory = ranges;
+		
+		if(allNull)
+			return null;
 		
 		return ranges;
 	}
@@ -259,6 +320,21 @@ public class LayoutContainer implements Layoutable
 		Integer[] indexOrder = comparator.createIndexArray();
 		Arrays.sort(indexOrder, comparator);
 		
+		/*for (int i = 0; i < capacityValues.length; i++)
+		{
+			int addValue;
+			
+			if(capacityValues[indexOrder[i]] <= remaining)
+				addValue = capacityValues[indexOrder[i]];
+			else
+				addValue = remaining;
+			
+			distribution[indexOrder[i]] += addValue;
+			remaining -= addValue;
+			
+			if (remaining <= 0) { break; }
+		}*/
+		
 		while (remaining > 0)
 		{
 			if(remaining < indexOrder.length)
@@ -313,29 +389,31 @@ public class LayoutContainer implements Layoutable
 		return distribution;
 	}
 	
-	/*private boolean ControlLayoutProcess(WidthHeightRange range, int width, int height)
+	private boolean Control(WidthHeightRange range)
 	{
-		boolean fillerNeed = range.TestFillerNeed(width, height);
+		int width = SmartLayout.app.width;
+		int height = SmartLayout.app.height;
+		
 		boolean verticalScrollNeed = range.TestVerticalScrollNeed(height);
 		boolean horizontalScrollNeed = range.TestHorizontalScrollNeed(width);
 		
-		switch(SmartLayout.app.process)
+		switch(SmartLayout.app.processType)
 		{
 		case FEASIBLE:
 			
-			return range.TestFeasiblity(width, height) && !range.isHasFiller();
+			return !range.isHasFiller() && !verticalScrollNeed && !horizontalScrollNeed;
 			
 		case FILLER:
 			
-			return fillerNeed && !(verticalScrollNeed || horizontalScrollNeed);
+			return !verticalScrollNeed && !horizontalScrollNeed;
 			
 		case VERTICAL_SCROLL:
 			
-			return verticalScrollNeed && !horizontalScrollNeed;
+			return !horizontalScrollNeed;
 			
 		case HORIZONTAL_SCROLL:
 			
-			return !verticalScrollNeed && horizontalScrollNeed;
+			return !verticalScrollNeed;
 			
 		case NO_PREFERENCE:
 			
@@ -345,7 +423,7 @@ public class LayoutContainer implements Layoutable
 			
 			return false;
 		}
-	}*/
+	}
 	
 	@Override
 	public void Print(int index)

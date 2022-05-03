@@ -122,7 +122,7 @@ public class ExtendedArray<T>
 	
 	public void makeArrayOf(ExtendedArrayList<T> arrayList)
 	{
-		for(long i = 0; i < length; i++)
+		for(long i = 0; i < arrayList.length; i++)
 			set(arrayList.get(i), i);
 	}
 }

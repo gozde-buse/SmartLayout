@@ -1,5 +1,6 @@
 package com.prototype.smartlayout;
 
+import com.prototype.Controller;
 import com.prototype.smartlayout.listeners.ComponentResizeEndListener;
 import com.prototype.smartlayout.model.ExtendedArray;
 import com.prototype.smartlayout.model.ExtendedArrayList;
@@ -12,7 +13,6 @@ import com.prototype.smartlayout.model.enums.ComponentDimensionEnum;
 import com.prototype.smartlayout.utils.AestheticMeasureUtil;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.util.ArrayList;
 import java.util.Vector;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -28,14 +28,12 @@ public class SmartLayout extends JFrame
 	public static Vector<LayoutComponent> components = new Vector<LayoutComponent>();
 	public static Vector<LayoutComponent> fillers = new Vector<LayoutComponent>();
 	
-	public int width;	
-	public int height;
-	public AlignmentEnum horizontalAlignment;
-	public AlignmentEnum verticalAlignment;
+	public int width, height;
+	public int fillerTrimRatio, verticalTrimRatio, horizontalTrimRatio;
+	public AlignmentEnum horizontalAlignment, verticalAlignment;
 	
 	private Layoutable root;
 	private ExtendedArray<WidthHeightRange> finalLayoutCases;
-	private ArrayList<ExtendedArrayList<WidthHeightRange>> layoutCases;
 	private JFrame resultFrame;
 	
 	public ExtendedArray<String> comboBoxLayouts;
@@ -50,25 +48,16 @@ public class SmartLayout extends JFrame
 	{
 		this.root = root;
 		processType = ProcessEnum.FEASIBLE;
-		layoutCases = new ArrayList<ExtendedArrayList<WidthHeightRange>>(5);
-		
-		ExtendedArrayList<WidthHeightRange> feasibleLayouts = new ExtendedArrayList<WidthHeightRange>(WidthHeightRange.class);
-		ExtendedArrayList<WidthHeightRange> fillerLayouts = new ExtendedArrayList<WidthHeightRange>(WidthHeightRange.class);
-		ExtendedArrayList<WidthHeightRange> verticalLayouts = new ExtendedArrayList<WidthHeightRange>(WidthHeightRange.class);
-		ExtendedArrayList<WidthHeightRange> horizontalLayouts = new ExtendedArrayList<WidthHeightRange>(WidthHeightRange.class);
-		ExtendedArrayList<WidthHeightRange> verticalAndHorizontalLayouts = new ExtendedArrayList<WidthHeightRange>(WidthHeightRange.class);
-		
-		layoutCases.add(feasibleLayouts);
-		layoutCases.add(fillerLayouts);
-		layoutCases.add(verticalLayouts);
-		layoutCases.add(horizontalLayouts);
-		layoutCases.add(verticalAndHorizontalLayouts);
 	}
 	
-	public void Run(int width, int height)
+	public void Run(int width, int height, int fillerTrimRatio, int verticalTrimRatio, int horizontalTrimRatio)
 	{
 		SetSize(width, height);
-		Calculate(width, height);
+		this.fillerTrimRatio = fillerTrimRatio;
+		this.verticalTrimRatio = verticalTrimRatio;
+		this.horizontalTrimRatio = horizontalTrimRatio;
+		
+		Calculate();
 		ClassifyLayouts();
 		
 		int finalLayoutId = TestAesthetics();
@@ -83,38 +72,118 @@ public class SmartLayout extends JFrame
 		this.height = height;
 	}
 	
-	private void Calculate(int width, int height)
+	private void Calculate()
 	{
-		root.Print(0);
+		//root.Print(0);
 		
 		long startTime, elapsedTime;
 		startTime = System.nanoTime();
 		
-		//((LayoutContainer) root).clearMemoization(); //root layout container değilse ne olacak?
-		//finalLayoutCases.clear();
-		//finalLayoutCases = new Vector<WidthHeightRange>();
-
-		//Collections.addAll(finalLayoutCases, root.GetRanges(width, height));
-		do
+		while(finalLayoutCases == null)
 		{
+			finalLayoutCases = root.GetRanges();
 			
+			if(finalLayoutCases == null)
+			{
+				int index = processType.ordinal();
+				index++;
+				
+				if(index >= 5)
+					return;
+				
+				processType = ProcessEnum.values()[index];
+			}
 		}
-		while(finalLayoutCases == null);
-		finalLayoutCases = root.GetRanges(width, height);
 
 		elapsedTime = System.nanoTime() - startTime;
 		System.out.println("CALCULATE - Get Ranges Time: " + elapsedTime);
 		
 		startTime = System.nanoTime();
 		
-		//for(WidthHeightRange flc: finalLayoutCases) { flc.ListRange(0); }
+		//for(int i = 0; i < finalLayoutCases.length; i++) { finalLayoutCases.get(i).ListRange(0); }
 		
 		elapsedTime = System.nanoTime() - startTime;
 		System.out.println("CALCULATE - List Ranges Time: " + elapsedTime);
+	}
+	
+	private void ClassifyLayouts()
+	{
+		long startTime, elapsedTime;
+		ExtendedArrayList<WidthHeightRange> classifiedLayoutCases = new ExtendedArrayList<WidthHeightRange>(WidthHeightRange.class);
+		ExtendedArrayList<WidthHeightRange> eliminatedLayoutCases = new ExtendedArrayList<WidthHeightRange>(WidthHeightRange.class);
 		
 		startTime = System.nanoTime();
 		
-		//System.out.println(finalLayoutCases.size());
+		while(classifiedLayoutCases.length == 0)
+		{
+			for(long i = 0; i < finalLayoutCases.length; i++)
+			{
+				WidthHeightRange flc = finalLayoutCases.get(i);
+				
+				if(flc != null)
+				{
+					if(processType == ProcessEnum.FEASIBLE)
+					{
+						if(flc.TestFeasiblity(width, height))
+							classifiedLayoutCases.add(flc);
+						else
+							eliminatedLayoutCases.add(flc);
+					}
+					else
+					{
+						boolean fillerNeed = flc.TestFillerNeed(width, height);
+						boolean verticalNeed = flc.TestVerticalScrollNeed(height);
+						boolean horizontalNeed = flc.TestHorizontalScrollNeed(width);
+
+						flc.setHasFiller(fillerNeed);
+						flc.setHasVerticalScroll(verticalNeed);
+						flc.setHasHorizontalScroll(horizontalNeed);
+						
+						if(Trim(flc))
+							classifiedLayoutCases.add(flc);
+						else
+							eliminatedLayoutCases.add(flc);
+					}
+				}
+			}
+			
+			if(classifiedLayoutCases.length == 0)
+			{
+				if(processType == ProcessEnum.FEASIBLE)
+				{
+					processType = ProcessEnum.FILLER;
+					classifiedLayoutCases.MakeArrayListOf(eliminatedLayoutCases);
+					
+					break;
+				}
+				else if(processType == ProcessEnum.FILLER)
+					fillerTrimRatio--;
+				else if(processType == ProcessEnum.VERTICAL_SCROLL)
+					verticalTrimRatio--;
+				else if(processType == ProcessEnum.HORIZONTAL_SCROLL)
+					horizontalTrimRatio--;
+				else
+				{
+					if(verticalTrimRatio > 0)
+						verticalTrimRatio--;
+					
+					if(horizontalTrimRatio > 0)
+						horizontalTrimRatio--;
+				}
+
+				finalLayoutCases = new ExtendedArray<WidthHeightRange>(WidthHeightRange.class, eliminatedLayoutCases.length);
+				finalLayoutCases.makeArrayOf(eliminatedLayoutCases);
+				eliminatedLayoutCases.clear();
+			}
+		}
+
+		elapsedTime = System.nanoTime() - startTime;
+		System.out.println("CLASSIFY LAYOUTS - Classify Layouts Time: " + elapsedTime);
+
+		finalLayoutCases = new ExtendedArray<WidthHeightRange>(WidthHeightRange.class, classifiedLayoutCases.length);
+		finalLayoutCases.makeArrayOf(classifiedLayoutCases);
+
+		startTime = System.nanoTime();
 		
 		comboBoxLayouts = new ExtendedArray<String>(String.class, finalLayoutCases.length);
 		
@@ -125,80 +194,74 @@ public class SmartLayout extends JFrame
 		}
 
 		elapsedTime = System.nanoTime() - startTime;
-		System.out.println("CALCULATE - Arrange Combobox Time: " + elapsedTime);
+		System.out.println("CLASSIFY LAYOUTS - Arrange Combobox Time: " + elapsedTime);
 	}
 	
-	private void ClassifyLayouts()
+	private boolean Trim(WidthHeightRange range)
 	{
-		long startTime, elapsedTime;
-		ExtendedArrayList<WidthHeightRange> tempLayoutCases = new ExtendedArrayList<WidthHeightRange>(WidthHeightRange.class);
-		
-		for(ExtendedArrayList<WidthHeightRange> layoutCase: layoutCases)
+		switch(processType)
 		{
-			layoutCase.clear();
-		}
-		
-		startTime = System.nanoTime();
-		
-		for(long i = 0; i < finalLayoutCases.length; i++)
-		{
-			WidthHeightRange flc = finalLayoutCases.get(i);
+		case FILLER:
 			
-			if(flc == null)
-				return;
-			
-			boolean feasible = flc.TestFeasiblity(width, height);
-			
-			if(!feasible)
+			if(fillerTrimRatio != 0)
 			{
-				boolean needVerticalScroll = flc.TestVerticalScrollNeed(height);
-				flc.setHasVerticalScroll(needVerticalScroll);
+				float maxWidth = width * fillerTrimRatio / 10;
+				float maxHeight = height * fillerTrimRatio / 10;
 				
-				boolean needHorizontalScroll = flc.TestHorizontalScrollNeed(width);
-				flc.setHasHorizontalScroll(needHorizontalScroll);
-				
-				boolean needFiller = flc.TestFillerNeed(width, height);
-				flc.setHasFiller(needFiller);
+				if(range.getMaxWidth() < maxWidth || range.getMaxHeight() < maxHeight)
+					return false;
 			}
 			
-			if(!flc.isHasHorizontalScroll() && !flc.isHasVerticalScroll() && !flc.isHasFiller())
-			{//Feasible
-				layoutCases.get(0).add(flc);
+			return true;
+			
+		case VERTICAL_SCROLL:
+
+			if(verticalTrimRatio != 0)
+			{
+				float minHeight = height * (verticalTrimRatio + 10) / 10;
+				
+				if(range.getMaxHeight() < minHeight)
+					return false;
 			}
-			else if(!flc.isHasHorizontalScroll() && !flc.isHasVerticalScroll() && flc.isHasFiller())
-			{//Filler
-				layoutCases.get(1).add(flc);
+
+			return true;
+			
+		case HORIZONTAL_SCROLL:
+
+			if(horizontalTrimRatio != 0)
+			{
+				float minWidth = height * (horizontalTrimRatio + 10) / 10;
+				
+				if(range.getMaxWidth() < minWidth)
+					return false;
 			}
-			else if(!flc.isHasHorizontalScroll() && flc.isHasVerticalScroll())
-			{//Vertical
-				layoutCases.get(2).add(flc);
+
+			return true;
+			
+		case NO_PREFERENCE:
+
+			if(verticalTrimRatio != 0)
+			{
+				float minHeight = height * (verticalTrimRatio + 10) / 10;
+				
+				if(range.getMaxHeight() < minHeight)
+					return false;
 			}
-			else if(flc.isHasHorizontalScroll() && !flc.isHasVerticalScroll())
-			{//Horizontal
-				layoutCases.get(3).add(flc);
+
+			if(horizontalTrimRatio != 0)
+			{
+				float minWidth = height * (horizontalTrimRatio + 10) / 10;
+				
+				if(range.getMaxWidth() < minWidth)
+					return false;
 			}
-			else
-			{//Vertical and Horizontal
-				layoutCases.get(4).add(flc);
-			}
+			
+			return true;
+			
+		default:
+				
+			return true;
 		}
-
-		elapsedTime = System.nanoTime() - startTime;
-		System.out.println("CLASSIFY LAYOUTS - Classify Layouts Time: " + elapsedTime);
-		startTime = System.nanoTime();
-
-		//finalLayoutCases.clear();
-		tempLayoutCases.addAll(layoutCases.get(0));
-		tempLayoutCases.addAll(layoutCases.get(1));
-		tempLayoutCases.addAll(layoutCases.get(2));
-		tempLayoutCases.addAll(layoutCases.get(3));
-		tempLayoutCases.addAll(layoutCases.get(4));
-
-		finalLayoutCases = new ExtendedArray<WidthHeightRange>(WidthHeightRange.class, finalLayoutCases.length);
-		finalLayoutCases.makeArrayOf(tempLayoutCases);
-
-		elapsedTime = System.nanoTime() - startTime;
-		System.out.println("CLASSIFY LAYOUTS - Rearrange Layout Cases Time: " + elapsedTime);
 	}
 	
 	private int TestAesthetics()
@@ -207,44 +270,47 @@ public class SmartLayout extends JFrame
 		int finalLayoutId = -1;
 		int idCounter = 0;
 		
+		System.out.println(processType + " " + finalLayoutCases.length);
+		
 		long startTime, elapsedTime;
 		startTime = System.nanoTime();
-
-		for(ExtendedArrayList<WidthHeightRange> layoutCase: layoutCases)
+		
+		for(long i = 0; i < finalLayoutCases.length; i++)
 		{
-			if(layoutCase.length != 0)
+			WidthHeightRange layout = finalLayoutCases.get(i);
+			
+			int layoutWidth, layoutHeight;
+			
+			if(layout.isHasVerticalScroll())
+				layoutHeight = layout.getMinHeight();
+			else
+				layoutHeight = height;
+			
+			if(layout.isHasHorizontalScroll())
+				layoutWidth = layout.getMinWidth();
+			else
+				layoutWidth = width;
+			
+			fillers.clear();
+
+			//long startTime2, elapsedTime2;
+			//startTime2 = System.nanoTime();
+			
+			root.GetFinalLayout(0, 0, layoutWidth, layoutHeight, layout);
+
+			//elapsedTime2 = System.nanoTime() - startTime2;
+			//System.out.println("TEST AESTHETICS - Get Layout Time: " + elapsedTime2);
+			
+			
+			float aesthetics = AestheticMeasureUtil.MeasureAesthetics(width, height, layoutWidth, layoutHeight);
+			
+			if(aesthetics > maxAesthetics)
 			{
-				for(long i = 0; i < layoutCase.length; i++)
-				{
-					WidthHeightRange layout = layoutCase.get(i);
-					
-					int layoutWidth, layoutHeight;
-					
-					if(layout.isHasVerticalScroll())
-						layoutHeight = layout.getMinHeight();
-					else
-						layoutHeight = height;
-					
-					if(layout.isHasHorizontalScroll())
-						layoutWidth = layout.getMinWidth();
-					else
-						layoutWidth = width;
-					
-					fillers.clear();
-					root.GetFinalLayout(0, 0, layoutWidth, layoutHeight, layout);
-					float aesthetics = AestheticMeasureUtil.MeasureAesthetics(width, height, layoutWidth, layoutHeight);
-					
-					if(aesthetics > maxAesthetics)
-					{
-						maxAesthetics = aesthetics;
-						finalLayoutId = idCounter;
-					}
-					
-					idCounter++;
-				}
-				
-				break;
+				maxAesthetics = aesthetics;
+				finalLayoutId = idCounter;
 			}
+			
+			idCounter++;
 		}
 		
 		elapsedTime = System.nanoTime() - startTime;
@@ -365,10 +431,15 @@ public class SmartLayout extends JFrame
 		if(this.width != width || this.height != height)
 		{
 			SetSize(width, height);
+			processType = ProcessEnum.FEASIBLE;
+
+			finalLayoutCases = null;
+			Calculate();
 			ClassifyLayouts();
 			
 			int finalLayoutId = TestAesthetics();
 			comboBoxSelectedId = finalLayoutId;
+			Controller.controller.ChangeComboBox();
 			
 			ChangeLayout();
 			

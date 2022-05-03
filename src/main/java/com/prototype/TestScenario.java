@@ -16,9 +16,9 @@ public class TestScenario
 {
 	public Layoutable SimpleTest()
 	{
-		JLabel ALabel = new JLabel();
-		JLabel BLabel = new JLabel();
-		JLabel CLabel = new JLabel();
+		JLabel ALabel = new JLabel("A");
+		JLabel BLabel = new JLabel("B");
+		JLabel CLabel = new JLabel("C");
         
 		Layoutable A = SmartLayout.CreateTreePiece("A", ALabel, ComponentDimensionEnum.MEDIUM_SMALLER);
 		Layoutable B = SmartLayout.CreateTreePiece("B", BLabel, ComponentDimensionEnum.MEDIUM_SMALLER);
@@ -31,11 +31,11 @@ public class TestScenario
 	
 	public Layoutable SimpleTest2()
 	{
-		Layoutable A = SmartLayout.CreateTreePiece("A", new JLabel(), ComponentDimensionEnum.MEDIUM_SMALLER);
-		Layoutable B = SmartLayout.CreateTreePiece("B", new JLabel(), ComponentDimensionEnum.MEDIUM_SMALLER);
-		Layoutable C = SmartLayout.CreateTreePiece("C", new JLabel(), ComponentDimensionEnum.MEDIUM_SMALLER);
+		Layoutable A = SmartLayout.CreateTreePiece("A", new JLabel("A"), ComponentDimensionEnum.MEDIUM_SMALLER);
+		Layoutable B = SmartLayout.CreateTreePiece("B", new JLabel("B"), ComponentDimensionEnum.MEDIUM_SMALLER);
+		Layoutable C = SmartLayout.CreateTreePiece("C", new JLabel("C"), ComponentDimensionEnum.MEDIUM_SMALLER);
 		Layoutable D = SmartLayout.CreateTreePiece("D", A, B, C);
-		Layoutable E = SmartLayout.CreateTreePiece("E", new JLabel(), ComponentDimensionEnum.MEDIUM_LARGER);
+		Layoutable E = SmartLayout.CreateTreePiece("E", new JLabel("E"), ComponentDimensionEnum.MEDIUM_LARGER);
 		
 		Layoutable testScenario = SmartLayout.CreateTreePiece("F", D, E);
 		
@@ -204,42 +204,42 @@ public class TestScenario
 	
 	public Layoutable SchengenVisa31CompApplicationForm()
 	{
-		Layoutable compALabel = SmartLayout.CreateTreePiece("Surname", new JLabel(), ComponentDimensionEnum.SMALL_SMALLER);
-		Layoutable compATextField = SmartLayout.CreateTreePiece("Enter Surname", new JTextField(), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compALabel = SmartLayout.CreateTreePiece("Surname", new JLabel("Surname"), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compATextField = SmartLayout.CreateTreePiece("Enter Surname", new JTextField("Enter Surname"), ComponentDimensionEnum.SMALL_SMALLER);
 		Layoutable surnameField = SmartLayout.CreateTreePiece("Surname Field", compALabel, compATextField);
 		
-		Layoutable compBLabel = SmartLayout.CreateTreePiece("<html>Surname<br/>at Birth</html>", new JLabel(), ComponentDimensionEnum.SMALL_SMALLER);
-		Layoutable compBTextField = SmartLayout.CreateTreePiece("Enter Surname at Birth", new JTextField(), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compBLabel = SmartLayout.CreateTreePiece("<html>Surname<br/>at Birth</html>", new JLabel("Surname at Birth"), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compBTextField = SmartLayout.CreateTreePiece("Enter Surname at Birth", new JTextField("Enter Surname at Birth"), ComponentDimensionEnum.SMALL_SMALLER);
 		Layoutable surnameAtBirthField = SmartLayout.CreateTreePiece("Surname At Birth Field", compBLabel, compBTextField);
 		
-		Layoutable compCLabel = SmartLayout.CreateTreePiece("First Name", new JLabel(), ComponentDimensionEnum.SMALL_SMALLER);
-		Layoutable compCTextField = SmartLayout.CreateTreePiece("Enter First Name", new JTextField(), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compCLabel = SmartLayout.CreateTreePiece("First Name", new JLabel("First Name"), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compCTextField = SmartLayout.CreateTreePiece("Enter First Name", new JTextField("Enter First Name"), ComponentDimensionEnum.SMALL_SMALLER);
 		Layoutable firstNameField = SmartLayout.CreateTreePiece("First Name Field", compCLabel, compCTextField);
 		
 		Layoutable leftUpperGroup = SmartLayout.CreateTreePiece("Left Upper Group", surnameField, surnameAtBirthField, firstNameField);
 		
-		Layoutable noticeLabel = SmartLayout.CreateTreePiece("<html>FOR OFFICIAL<br/>USE ONLY</html>", new JLabel(), ComponentDimensionEnum.SMALL_SLACK_SMALLER);
+		Layoutable noticeLabel = SmartLayout.CreateTreePiece("<html>FOR OFFICIAL<br/>USE ONLY</html>", new JLabel("FOR OFFICIAL USE ONLY"), ComponentDimensionEnum.SMALL_SLACK_SMALLER);
 		
-		Layoutable compDLabel = SmartLayout.CreateTreePiece("<html>Date of<br/>Application</html>", new JLabel(), ComponentDimensionEnum.SMALL_SMALLER);
-		Layoutable compDTextField = SmartLayout.CreateTreePiece("Enter Date of Application", new JTextField(), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compDLabel = SmartLayout.CreateTreePiece("<html>Date of<br/>Application</html>", new JLabel("Date of Application"), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compDTextField = SmartLayout.CreateTreePiece("Enter Date of Application", new JTextField("Enter Date of Application"), ComponentDimensionEnum.SMALL_SMALLER);
 		Layoutable dateOfApplicationField = SmartLayout.CreateTreePiece("Date of Application Field", compDLabel, compDTextField);
 		
-		Layoutable compELabel = SmartLayout.CreateTreePiece("<html>Application<br/>Number</html>", new JLabel(), ComponentDimensionEnum.SMALL_SMALLER);
-		Layoutable compETextField = SmartLayout.CreateTreePiece("Enter Application Number", new JTextField(), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compELabel = SmartLayout.CreateTreePiece("<html>Application<br/>Number</html>", new JLabel("Application Number"), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compETextField = SmartLayout.CreateTreePiece("Enter Application Number", new JTextField("Enter Application Number"), ComponentDimensionEnum.SMALL_SMALLER);
 		Layoutable applicationNumberField = SmartLayout.CreateTreePiece("Application Number Field", compELabel, compETextField);
 		
 		Layoutable rightUpperGroup = SmartLayout.CreateTreePiece("Right Upper Group", noticeLabel, dateOfApplicationField, applicationNumberField);
 		
-		Layoutable compFLabel = SmartLayout.CreateTreePiece("<html>Date of Birth<br/>(dd-mm-yyyy)</html>", new JLabel(), ComponentDimensionEnum.SMALL_SMALLER);
-		Layoutable compFTextField = SmartLayout.CreateTreePiece("Enter Birth Date", new JTextField(), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compFLabel = SmartLayout.CreateTreePiece("<html>Date of Birth<br/>(dd-mm-yyyy)</html>", new JLabel("Date of Birth (dd-mm-yyyy)"), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compFTextField = SmartLayout.CreateTreePiece("Enter Birth Date", new JTextField("Enter Birth Date"), ComponentDimensionEnum.SMALL_SMALLER);
 		Layoutable birthDateField = SmartLayout.CreateTreePiece("Birth Date Field", compFLabel, compFTextField);
 		
-		Layoutable compGLabel = SmartLayout.CreateTreePiece("Place of Birth", new JLabel(), ComponentDimensionEnum.SMALL_SMALLER);
-		Layoutable compGTextField = SmartLayout.CreateTreePiece("Enter Place of Birth", new JTextField(), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compGLabel = SmartLayout.CreateTreePiece("Place of Birth", new JLabel("Place of Birth"), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compGTextField = SmartLayout.CreateTreePiece("Enter Place of Birth", new JTextField("Enter Place of Birth"), ComponentDimensionEnum.SMALL_SMALLER);
 		Layoutable placeOfBirthField = SmartLayout.CreateTreePiece("Place of Birth Field", compGLabel, compGTextField);
 		
-		Layoutable compHLabel = SmartLayout.CreateTreePiece("Country of Birth", new JLabel(), ComponentDimensionEnum.SMALL_SMALLER);
-		Layoutable compHTextField = SmartLayout.CreateTreePiece("Enter Country of Birth", new JTextField(), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compHLabel = SmartLayout.CreateTreePiece("Country of Birth", new JLabel("Country of Birth"), ComponentDimensionEnum.SMALL_SMALLER);
+		Layoutable compHTextField = SmartLayout.CreateTreePiece("Enter Country of Birth", new JTextField("Enter Country of Birth"), ComponentDimensionEnum.SMALL_SMALLER);
 		Layoutable countryOfBirthField = SmartLayout.CreateTreePiece("Country of Birth Field", compHLabel, compHTextField);
 		
 		Layoutable birthPlaceGroup = SmartLayout.CreateTreePiece("Birth Place Group", placeOfBirthField, countryOfBirthField);

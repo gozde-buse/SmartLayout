@@ -19,14 +19,16 @@ import com.prototype.smartlayout.model.enums.AlignmentEnum;
 
 public class Controller extends JFrame
 {
+	public static Controller controller;
+	
 	private static final long serialVersionUID = 1L;
-	private static Controller controller;
 	private static TestScenario test;
 	
 	private JTextField widthTextField, heightTextField;
 	private JComboBox<String> horAlignmentComboBox, verAlignmentComboBox;
 	private JComboBox<String> layoutComboBox;
 	private JButton changeButton;
+	private JTextField fillerTrimTextField, verticalTrimTextField, horizontalTrimTextField;
 	
 	private Layoutable layout;
 
@@ -36,7 +38,7 @@ public class Controller extends JFrame
 		controller.CreateControlPanel();
 		
 		test = new TestScenario();
-		controller.layout = test.SchengenVisa51CompApplicationForm();
+		controller.layout = test.SchengenVisa31CompApplicationForm();
 	}
 	
 	private void CreateControlPanel()
@@ -119,6 +121,69 @@ public class Controller extends JFrame
 		alignmentPanel.add(Box.createVerticalStrut(4));
 		alignmentPanel.add(verAlignmentPanel);
 		
+		JLabel fillerTrimLabel = new JLabel("Filler Trim Ratio:");
+		fillerTrimLabel.setPreferredSize(new Dimension(200, 24));
+		fillerTrimTextField = new JTextField("0");
+		fillerTrimTextField.setPreferredSize(new Dimension(24, 24));
+		JLabel fillerTrimPercentLabel = new JLabel("/10");
+		fillerTrimPercentLabel.setPreferredSize(new Dimension(24, 24));
+		
+		JPanel fillerTrimPanel = new JPanel();
+		fillerTrimPanel.setPreferredSize(new Dimension(312, 24));
+		fillerTrimPanel.setLayout(new BoxLayout(fillerTrimPanel, BoxLayout.X_AXIS));
+		fillerTrimPanel.add(Box.createHorizontalStrut(24));
+		fillerTrimPanel.add(fillerTrimLabel);
+		fillerTrimPanel.add(Box.createHorizontalStrut(4));
+		fillerTrimPanel.add(fillerTrimTextField);
+		fillerTrimPanel.add(Box.createHorizontalStrut(4));
+		fillerTrimPanel.add(fillerTrimPercentLabel);
+		fillerTrimPanel.add(Box.createHorizontalStrut(24));
+		
+		JLabel verticalTrimLabel = new JLabel("Vertical Scroll Trim Ratio:");
+		verticalTrimLabel.setPreferredSize(new Dimension(200, 24));
+		verticalTrimTextField = new JTextField("0");
+		verticalTrimTextField.setPreferredSize(new Dimension(24, 24));
+		JLabel verticalTrimPercentLabel = new JLabel("/10");
+		verticalTrimPercentLabel.setPreferredSize(new Dimension(24, 24));
+		
+		JPanel verticalTrimPanel = new JPanel();
+		verticalTrimPanel.setPreferredSize(new Dimension(312, 24));
+		verticalTrimPanel.setLayout(new BoxLayout(verticalTrimPanel, BoxLayout.X_AXIS));
+		verticalTrimPanel.add(Box.createHorizontalStrut(24));
+		verticalTrimPanel.add(verticalTrimLabel);
+		verticalTrimPanel.add(Box.createHorizontalStrut(4));
+		verticalTrimPanel.add(verticalTrimTextField);
+		verticalTrimPanel.add(Box.createHorizontalStrut(4));
+		verticalTrimPanel.add(verticalTrimPercentLabel);
+		verticalTrimPanel.add(Box.createHorizontalStrut(24));
+		
+		JLabel horizontalTrimLabel = new JLabel("Horizontal Scroll Trim Ratio:");
+		horizontalTrimLabel.setPreferredSize(new Dimension(200, 24));
+		horizontalTrimTextField = new JTextField("0");
+		horizontalTrimTextField.setPreferredSize(new Dimension(24, 24));
+		JLabel horizontalTrimPercentLabel = new JLabel("/10");
+		horizontalTrimPercentLabel.setPreferredSize(new Dimension(24, 24));
+		
+		JPanel horizontalTrimPanel = new JPanel();
+		horizontalTrimPanel.setPreferredSize(new Dimension(312, 24));
+		horizontalTrimPanel.setLayout(new BoxLayout(horizontalTrimPanel, BoxLayout.X_AXIS));
+		horizontalTrimPanel.add(Box.createHorizontalStrut(24));
+		horizontalTrimPanel.add(horizontalTrimLabel);
+		horizontalTrimPanel.add(Box.createHorizontalStrut(4));
+		horizontalTrimPanel.add(horizontalTrimTextField);
+		horizontalTrimPanel.add(Box.createHorizontalStrut(4));
+		horizontalTrimPanel.add(horizontalTrimPercentLabel);
+		horizontalTrimPanel.add(Box.createHorizontalStrut(24));
+		
+		JPanel trimPanel = new JPanel();
+		trimPanel.setPreferredSize(new Dimension(312, 80));
+		trimPanel.setLayout(new BoxLayout(trimPanel, BoxLayout.Y_AXIS));
+		trimPanel.add(fillerTrimPanel);
+		trimPanel.add(Box.createVerticalStrut(4));
+		trimPanel.add(verticalTrimPanel);
+		trimPanel.add(Box.createVerticalStrut(4));
+		trimPanel.add(horizontalTrimPanel);
+		
 		JButton runButton = new JButton("Run");
 		runButton.setPreferredSize(new Dimension(312, 24));
 		runButton.addActionListener(new ActionListener()
@@ -131,11 +196,13 @@ public class Controller extends JFrame
 		runPanel.add(runButton);
 		
 		JPanel settingsPanel = new JPanel();
-		settingsPanel.setPreferredSize(new Dimension(312, 132));
+		settingsPanel.setPreferredSize(new Dimension(312, 224));
 		settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
 		settingsPanel.add(sizePanel);
 		settingsPanel.add(Box.createVerticalStrut(12));
 		settingsPanel.add(alignmentPanel);
+		settingsPanel.add(Box.createVerticalStrut(12));
+		settingsPanel.add(trimPanel);
 		settingsPanel.add(Box.createVerticalStrut(12));
 		settingsPanel.add(runPanel);
 		
@@ -178,13 +245,19 @@ public class Controller extends JFrame
 	{
 		String widthString = widthTextField.getText();
 		String heightString = heightTextField.getText();
+		String fillerTrimRatioString = fillerTrimTextField.getText();
+		String verticalTrimRatioString = verticalTrimTextField.getText();
+		String horizontalTrimRatioString = horizontalTrimTextField.getText();
 		
-		int width, height;
+		int width, height, fillerTrimRatio, verticalTrimRatio, horizontalTrimRatio;
 		
 		try
 		{
 			width = Integer.parseInt(widthString);
 			height = Integer.parseInt(heightString);
+			fillerTrimRatio = Integer.parseInt(fillerTrimRatioString);
+			verticalTrimRatio = Integer.parseInt(verticalTrimRatioString);
+			horizontalTrimRatio = Integer.parseInt(horizontalTrimRatioString);
 	    }
 		catch (NumberFormatException e)
 		{
@@ -192,10 +265,19 @@ public class Controller extends JFrame
 			
 	        return;
 	    }
+		
+		if(fillerTrimRatio < 0 || fillerTrimRatio > 10 || verticalTrimRatio < 0 || verticalTrimRatio > 10
+				|| horizontalTrimRatio < 0 || horizontalTrimRatio > 10)
+		{
+			System.out.println("Trim değerleri 0-10 arasında olmalı!!");
+			
+			return;
+		}
+		
 
 		SmartLayout.app = new SmartLayout(layout);
 		SmartLayout.app.SetAlignment(horAlignmentComboBox.getSelectedIndex(), verAlignmentComboBox.getSelectedIndex());
-		SmartLayout.app.Run(width, height);
+		SmartLayout.app.Run(width, height, fillerTrimRatio, verticalTrimRatio, horizontalTrimRatio);
 		
 		for(int i = 0; i < SmartLayout.app.comboBoxLayouts.length; i++)
 		{
@@ -232,21 +314,16 @@ public class Controller extends JFrame
 		SmartLayout.app.height = height;
 		SmartLayout.app.ChangeLayout();
 	}
+	
+	public void ChangeComboBox()
+	{
+		layoutComboBox.removeAllItems();
+		
+		for(int i = 0; i < SmartLayout.app.comboBoxLayouts.length; i++)
+		{
+			layoutComboBox.addItem(SmartLayout.app.comboBoxLayouts.get(i));
+		}
+		
+		layoutComboBox.setSelectedIndex(SmartLayout.app.comboBoxSelectedId);
+	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
