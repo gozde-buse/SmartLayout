@@ -53,7 +53,7 @@ public class AestheticMeasureUtil
 	};
 	
 	private HashMap<LayoutComponent, ComponentData> componentDataMap;
-	private ArrayList<ComponentData> datas;
+	private ArrayList<ComponentData> datas; //Array yapılabilir -> Boyut: components.size()
 	private float[] maxAreas;
 	
 	private int componentSize;
@@ -65,6 +65,40 @@ public class AestheticMeasureUtil
 	
 	private int layoutWidth;
 	private int layoutHeight;
+	
+	private float[] balance_w;
+	private float equilibrium_totalComponentArea;
+	private float[] equilibrium_centerFactors;
+	private float[] symmetry_x, symmetry_y, symmetry_h, symmetry_b, symmetry_t, symmetry_r;
+	private float[] sequence_w;
+	private float cohesion_ffoSum, cohesion_floSum;
+	private float unity_totalAreas, unity_sizeCount;
+	private float proportion_tempObjectTotal;
+	private float simplicity_n_vap, simplicity_n_hap;
+	private float density_totalAreas;
+	private float regularity_n_vap, regularity_n_hap;
+	private float economy_sizeCount;
+	private float[] homogenity_n;
+	private float[] rhythm_x, rhythm_y, rhythm_a;
+	
+	public AestheticMeasureUtil()
+	{
+		datas = new ArrayList<ComponentData>();
+		balance_w = new float[4];
+		equilibrium_centerFactors = new float[2];
+		symmetry_x = new float[4]; symmetry_y = new float[4];
+		symmetry_b = new float[4]; symmetry_h = new float[4];
+		symmetry_t = new float[4]; symmetry_r = new float[4];
+		sequence_w = new float[4];
+		unity_sizeCount = 1;
+		simplicity_n_vap = simplicity_n_hap = 1;
+		regularity_n_vap = regularity_n_hap = 1;
+		economy_sizeCount = 1;
+		homogenity_n = new float[4];
+		rhythm_x = new float[4];
+		rhythm_y = new float[4];
+		rhythm_a = new float[4];
+	}
 	
 	public static float MeasureAesthetics(int frameWidth, int frameHeight, int layoutWidth, int layoutHeight)
 	{
@@ -111,19 +145,8 @@ public class AestheticMeasureUtil
 		float balance;
 		float bm_horizontal, bm_vertical;
 		
-		float w_left, w_right, w_top, w_bottom;
-		w_left = w_right = w_top = w_bottom = 0;
-		
-		for(ComponentData data: datas)
-		{
-			w_left += data.getLeftDistance() * (data.getLeftArea() / maxAreas[0]);
-			w_right += data.getRightDistance() * (data.getRightArea() / maxAreas[1]);
-			w_top += data.getTopDistance() * (data.getTopArea() / maxAreas[2]);
-			w_bottom += data.getBottomDistance() * (data.getBottomArea() / maxAreas[3]);
-		}
-		
-		bm_horizontal = (w_top - w_bottom) / Math.max(Math.abs(w_top), Math.abs(w_bottom));
-		bm_vertical = (w_left - w_right) / Math.max(Math.abs(w_left), Math.abs(w_right));
+		bm_horizontal = (balance_w[2] - balance_w[3]) / Math.max(Math.abs(balance_w[2]), Math.abs(balance_w[3]));
+		bm_vertical = (balance_w[0] - balance_w[1]) / Math.max(Math.abs(balance_w[0]), Math.abs(balance_w[1]));
 		
 		balance = 1 - (Math.abs(bm_vertical) + Math.abs(bm_horizontal)) / 2;
 		
@@ -136,18 +159,9 @@ public class AestheticMeasureUtil
 	{
 		float equilibrium;
 		float em_x, em_y;
-		float totalComponentArea, centerFactorX, centerFactorY;
-		totalComponentArea = centerFactorX = centerFactorY = 0;
 		
-		for(ComponentData data: datas)
-		{
-			totalComponentArea += data.getTotalArea();
-			centerFactorX += data.getTotalArea() * (data.getCenterX() - frameCenterX);
-			centerFactorY += data.getTotalArea() * (data.getCenterY() - frameCenterY);
-		}
-		
-		em_x = (2 * centerFactorX) / (componentSize * frameWidth * totalComponentArea);
-		em_y = (2 * centerFactorY) / (componentSize * frameHeight * totalComponentArea);
+		em_x = (2 * equilibrium_centerFactors[0]) / (componentSize * frameWidth * equilibrium_totalComponentArea);
+		em_y = (2 * equilibrium_centerFactors[1]) / (componentSize * frameHeight * equilibrium_totalComponentArea);
 		
 		equilibrium = 1 - (Math.abs(em_x) + Math.abs(em_y)) / 2;
 		
@@ -160,80 +174,27 @@ public class AestheticMeasureUtil
 	{
 		float symmetry;
 		float sym_v, sym_h, sym_r;
-		float[] x, y, b, h, t, r;
 		float[] x_n, y_n, b_n, h_n, t_n, r_n;
-		
-		x = new float[4]; y = new float[4];
-		b = new float[4]; h = new float[4];
-		t = new float[4]; r = new float[4];
-		
-		for(ComponentData data: datas)
-		{
-			//ComponentData data = componentDataMap.get(component);
-			
-			for(QuadrantData quadrantData: data.getQuadrants())
-			{
-				int quadrantIndex;
-				
-				switch(quadrantData.getQuadrantPosition())
-				{
-				case UL:
-					quadrantIndex = 0;
-					
-					break;
-					
-				case UR:
-					quadrantIndex = 1;
-					
-					break;
-					
-				case LL:
-					quadrantIndex = 2;
-
-					break;
-					
-				case LR:
-					quadrantIndex = 3;
-
-					break;
-					
-				default:
-					System.out.println("Error in symmetry measurement.");
-					
-					return -1;
-				}
-				
-				float centerDifferenceX = quadrantData.getCenterX() - frameCenterX;
-				float centerDifferenceY = quadrantData.getCenterY() - frameCenterY;
-				
-				x[quadrantIndex] += Math.abs(centerDifferenceX);
-				y[quadrantIndex] += Math.abs(centerDifferenceY);
-				h[quadrantIndex] += quadrantData.getHeight();
-				b[quadrantIndex] += quadrantData.getWidth();
-				t[quadrantIndex] += Math.abs(centerDifferenceY / centerDifferenceX);
-				r[quadrantIndex] += Math.sqrt(Math.pow(centerDifferenceX, 2) + Math.pow(centerDifferenceY, 2));
-			}
-		}
 
 		DecimalFormat df = new DecimalFormat("###.###");
 		df.setRoundingMode(RoundingMode.CEILING);
 		
 		for(int i = 0; i < 4; i++)
 		{
-			x[i] = Float.parseFloat(df.format(x[i]).replace(",", "."));
-			y[i] = Float.parseFloat(df.format(y[i]).replace(",", "."));
-			h[i] = Float.parseFloat(df.format(h[i]).replace(",", "."));
-			b[i] = Float.parseFloat(df.format(b[i]).replace(",", "."));
-			t[i] = Float.parseFloat(df.format(t[i]).replace(",", "."));
-			r[i] = Float.parseFloat(df.format(r[i]).replace(",", "."));
+			symmetry_x[i] = Float.parseFloat(df.format(symmetry_x[i]).replace(",", "."));
+			symmetry_y[i] = Float.parseFloat(df.format(symmetry_y[i]).replace(",", "."));
+			symmetry_h[i] = Float.parseFloat(df.format(symmetry_h[i]).replace(",", "."));
+			symmetry_b[i] = Float.parseFloat(df.format(symmetry_b[i]).replace(",", "."));
+			symmetry_t[i] = Float.parseFloat(df.format(symmetry_t[i]).replace(",", "."));
+			symmetry_r[i] = Float.parseFloat(df.format(symmetry_r[i]).replace(",", "."));
 		}
 		
-		x_n = Normalize(x);
-		y_n = Normalize(y);
-		h_n = Normalize(h);
-		b_n = Normalize(b);
-		t_n = Normalize(t);
-		r_n = Normalize(r);
+		x_n = Normalize(symmetry_x);
+		y_n = Normalize(symmetry_y);
+		h_n = Normalize(symmetry_h);
+		b_n = Normalize(symmetry_b);
+		t_n = Normalize(symmetry_t);
+		r_n = Normalize(symmetry_r);
 		
 		sym_v = (Math.abs(x_n[0] - x_n[1]) + Math.abs(x_n[2] - x_n[3]) + Math.abs(y_n[0] - y_n[1]) + Math.abs(y_n[2] - y_n[3])
 			+ Math.abs(h_n[0] - h_n[1]) + Math.abs(h_n[2] - h_n[3]) + Math.abs(b_n[0] - b_n[1]) + Math.abs(b_n[2] - b_n[3])
@@ -259,56 +220,15 @@ public class AestheticMeasureUtil
 		float sequence;
 		int[] q = {4, 3, 2, 1};
 		int[] v = new int[4];
-		float[] w = new float[4];
 		
-		for(ComponentData data: datas)
-		{
-			//ComponentData data = componentDataMap.get(component);
-			
-			for(QuadrantData quadrantData: data.getQuadrants())
-			{
-				int quadrantIndex;
-				
-				switch(quadrantData.getQuadrantPosition())
-				{
-				case UL:
-					quadrantIndex = 0;
-					
-					break;
-					
-				case UR:
-					quadrantIndex = 1;
-					
-					break;
-					
-				case LL:
-					quadrantIndex = 2;
-
-					break;
-					
-				case LR:
-					quadrantIndex = 3;
-
-					break;
-					
-				default:
-					System.out.println("Error in sequence measurement.");
-					
-					return -1;
-				}
-				
-				w[quadrantIndex] += quadrantData.getArea();
-			}
-		}
+		for(int i = 0; i < sequence_w.length; i++)
+			sequence_w[i] *= q[i];
 		
-		for(int i = 0; i < w.length; i++)
-			w[i] *= q[i];
-		
-		List<Float> w_sorted = Arrays.asList(w[0], w[1], w[2], w[3]);
+		List<Float> w_sorted = Arrays.asList(sequence_w[0], sequence_w[1], sequence_w[2], sequence_w[3]);
 		Collections.sort(w_sorted);
 		
 		for(int i = 0; i < v.length; i++)
-			v[i] = w_sorted.indexOf(w[i]) + 1;
+			v[i] = w_sorted.indexOf(sequence_w[i]) + 1;
 			
 		float subTotal = 0;
 		
@@ -326,7 +246,6 @@ public class AestheticMeasureUtil
 	{
 		float cohesion;
 		float cm_fl, cm_fo, cm_lo;
-		float f_fo, f_lo;
 		float t_fl;
 		int n = SmartLayout.components.size();
 		
@@ -343,35 +262,8 @@ public class AestheticMeasureUtil
 		
 		t_fl = layoutRate / frameRate;
 		
-		float f_fo_SubTotal = 0;
-		float f_lo_SubTotal = 0;
-
-		for(LayoutComponent component: SmartLayout.components)
-		{
-			float t_fo, t_lo;
-			width = component.getAssignedWidth();
-			height = component.getAssignedHeight();
-			float objectRate = height / width;
-			
-			t_fo = objectRate / frameRate;
-			t_lo = objectRate / layoutRate;
-			
-			if(t_fo <= 1)
-				f_fo = t_fo;
-			else
-				f_fo = 1 / t_fo;
-			
-			if(t_lo <= 1)
-				f_lo = t_lo;
-			else
-				f_lo = 1 / t_lo;
-			
-			f_fo_SubTotal += f_fo;
-			f_lo_SubTotal += f_lo;
-		}
-		
-		cm_fo = f_fo_SubTotal / n;
-		cm_lo = f_lo_SubTotal / n;
+		cm_fo = cohesion_ffoSum / n;
+		cm_lo = cohesion_floSum / n;
 		
 		if(t_fl <= 1)
 			cm_fl = t_fl;
@@ -389,44 +281,14 @@ public class AestheticMeasureUtil
 	{
 		float unity;
 		float um_form, um_space;
-		
-		Vector<Coordinate> sizes = new Vector<Coordinate>();
-		
-		for(LayoutComponent component: SmartLayout.components)
-		{
-			Coordinate size = new Coordinate(component.getAssignedWidth(), component.getAssignedHeight());
-			sizes.add(size);
-		}
-		
-		Collections.sort(sizes);
-		
-		int sizeCount = 1;
 		int n = SmartLayout.components.size();
 		
-		for(int i = 0; i < sizes.size() - 1; i++)
-		{
-			if(sizes.get(i).getX() != sizes.get(i + 1).getX())
-			{
-				sizeCount++;
-			}
-			else
-			{
-				if(sizes.get(i).getY() != sizes.get(i + 1).getY())
-					sizeCount++;
-			}
-		}
+		um_form = 1 - (unity_sizeCount - 1) / n;
 		
-		um_form = 1 - (sizeCount - 1) / n;
-		
-		float totalAreas = 0;
-		
-		for(ComponentData data: datas)
-			totalAreas += data.getTotalArea();
-		
-		if(frameWidth * frameHeight == totalAreas)
+		if(frameWidth * frameHeight == unity_totalAreas)
 			um_space = 1;
 		else
-			um_space = 1 - ((layoutWidth * layoutHeight - totalAreas) / (frameWidth * frameHeight - totalAreas));
+			um_space = 1 - ((layoutWidth * layoutHeight - unity_totalAreas) / (frameWidth * frameHeight - unity_totalAreas));
 		
 		unity = (Math.abs(um_form) + Math.abs(um_space)) / 2;
 		
@@ -458,28 +320,8 @@ public class AestheticMeasureUtil
 		
 		pm_layout = 1 - min_p / 0.5f;
 		
-		float tempObjectTotal = 0;
-		
-		for(LayoutComponent component: SmartLayout.components)
-		{
-			float r_i = (float) component.getAssignedHeight() / component.getAssignedWidth();
-			float p_i = r_i <= 1 ? r_i : 1 / r_i;
-			
-			min_p = Float.POSITIVE_INFINITY;
-			
-			for(int i = 0; i < 5; i++)
-			{
-				float p = Math.abs(p_j[i] - p_i);
-				
-				if(p < min_p)
-					min_p = p;
-			}
-			
-			tempObjectTotal += 1 - min_p / 0.5f;
-		}
-		
 		int n = SmartLayout.components.size();
-		pm_object = tempObjectTotal / n;
+		pm_object = proportion_tempObjectTotal / n;
 		
 		proportion = (Math.abs(pm_layout) + Math.abs(pm_object)) / 2;
 		
@@ -491,39 +333,9 @@ public class AestheticMeasureUtil
 	private float MeasureSimplicity()
 	{
 		float simplicity;
-		float n_vap, n_hap;
 		float n = SmartLayout.components.size();
 		
-		Vector<Integer> allVaps, allHaps;
-		allVaps = new Vector<Integer>();
-		allHaps = new Vector<Integer>();
-		
-		for(LayoutComponent component: SmartLayout.components)
-		{
-			allVaps.add(component.getAssignedY());
-			allVaps.add(component.getAssignedY() + component.getAssignedHeight());
-			allHaps.add(component.getAssignedX());
-			allHaps.add(component.getAssignedX() + component.getAssignedWidth());
-		}
-		
-		Collections.sort(allVaps);
-		Collections.sort(allHaps);
-		
-		n_vap = n_hap = 1;
-		
-		for(int i = 0; i < allVaps.size() - 1; i ++)
-		{
-			if(allVaps.get(i) != allVaps.get(i + 1))
-				n_vap++;
-		}
-		
-		for(int i = 0; i < allHaps.size() - 1; i ++)
-		{
-			if(allHaps.get(i) != allHaps.get(i + 1))
-				n_hap++;
-		}
-		
-		simplicity = 3 / (n_vap + n_hap + n);
+		simplicity = 3 / (simplicity_n_vap + simplicity_n_hap + n);
 		
 		//System.out.println("Simplicity: " + simplicity);
 		
@@ -533,12 +345,8 @@ public class AestheticMeasureUtil
 	private float MeasureDensity()
 	{
 		float density;
-		float totalAreas = 0;
 		
-		for(ComponentData data: datas)
-			totalAreas += data.getTotalArea();
-		
-		density = 1 - totalAreas / (layoutWidth * layoutHeight);
+		density = 1 - density_totalAreas / (layoutWidth * layoutHeight);
 		
 		//System.out.println("Density: " + density);
 		
@@ -551,41 +359,12 @@ public class AestheticMeasureUtil
 		float rm_alignment, rm_spacing;
 		
 		float n = SmartLayout.components.size();
-		float n_vap, n_hap, n_spacing;
+		float n_spacing;
 		
-		Vector<Integer> allVaps, allHaps, allSpacings;
-		allVaps = new Vector<Integer>();
-		allHaps = new Vector<Integer>();
-		allSpacings = new Vector<Integer>();
+		ArrayList<Integer> allSpacings;
+		allSpacings = new ArrayList<Integer>();
 		
-		for(LayoutComponent component: SmartLayout.components)
-		{
-			allVaps.add(component.getAssignedY());
-			allVaps.add(component.getAssignedY() + component.getAssignedHeight());
-			allHaps.add(component.getAssignedX());
-			allHaps.add(component.getAssignedX() + component.getAssignedWidth());
-		}
-		
-		Collections.sort(allVaps);
-		Collections.sort(allHaps);
-		
-		n_vap = n_hap = n_spacing = 1;
-		
-		for(int i = 0; i < allVaps.size() - 1; i ++)
-		{
-			if(allVaps.get(i) != allVaps.get(i + 1))
-				n_vap++;
-			
-			allSpacings.add(allVaps.get(i + 1) - allVaps.get(i));
-		}
-		
-		for(int i = 0; i < allHaps.size() - 1; i ++)
-		{
-			if(allHaps.get(i) != allHaps.get(i + 1))
-				n_hap++;
-			
-			allSpacings.add(allHaps.get(i + 1) - allHaps.get(i));
-		}
+		n_spacing = 1;
 		
 		Collections.sort(allSpacings);
 		
@@ -595,7 +374,7 @@ public class AestheticMeasureUtil
 				n_spacing++;
 		}
 		
-		rm_alignment = 1 - (n_vap + n_hap) / (2 * n);
+		rm_alignment = 1 - (regularity_n_vap + regularity_n_hap) / (2 * n);
 		rm_spacing = n != 1 ? 1 - (n_spacing - 1) / (2 * (n - 1)) : 1;
 		
 		regularity = (Math.abs(rm_alignment) + Math.abs(rm_spacing)) / 2;
@@ -609,32 +388,7 @@ public class AestheticMeasureUtil
 	{
 		float economy;
 		
-		Vector<Coordinate> sizes = new Vector<Coordinate>();
-		
-		for(LayoutComponent component: SmartLayout.components)
-		{
-			Coordinate size = new Coordinate(component.getAssignedWidth(), component.getAssignedHeight());
-			sizes.add(size);
-		}
-		
-		Collections.sort(sizes);
-		
-		int sizeCount = 1;
-		
-		for(int i = 0; i < sizes.size() - 1; i++)
-		{
-			if(sizes.get(i).getX() != sizes.get(i + 1).getX())
-			{
-				sizeCount++;
-			}
-			else
-			{
-				if(sizes.get(i).getY() != sizes.get(i + 1).getY())
-					sizeCount++;
-			}
-		}
-		
-		economy = 1 / sizeCount;
+		economy = 1 / economy_sizeCount;
 		
 		//System.out.println("Economy: " + economy);
 		
@@ -645,24 +399,12 @@ public class AestheticMeasureUtil
 	{
 		float homogeneity;
 		float w, w_max;
-		float n, n_ul, n_ur, n_ll, n_lr;
+		float n;
 		
-		n_ul = n_ur = n_ll = n_lr = 0;
+		n = homogenity_n[0] + homogenity_n[1] + homogenity_n[2] + homogenity_n[3];
 		
-		for(ComponentData data: datas)
-		{
-			for(QuadrantData qd: data.getQuadrants())
-			{
-				if(qd.getQuadrantPosition() == QuadrantEnum.UL) { n_ul++; }
-				else if(qd.getQuadrantPosition() == QuadrantEnum.UR) { n_ur++; }
-				else if(qd.getQuadrantPosition() == QuadrantEnum.LL) { n_ll++; }
-				else if(qd.getQuadrantPosition() == QuadrantEnum.LR) { n_lr++; }
-			}
-		}
-		
-		n = n_ul + n_ur + n_ll + n_lr;
-		
-		w = (float) (Gamma.gamma(n + 1) / (Gamma.gamma(n_ul + 1) * Gamma.gamma(n_ur + 1) * Gamma.gamma(n_ll + 1) * Gamma.gamma(n_lr + 1)));
+		w = (float) (Gamma.gamma(n + 1) / (Gamma.gamma(homogenity_n[0] + 1) * Gamma.gamma(homogenity_n[1] + 1)
+				* Gamma.gamma(homogenity_n[2] + 1) * Gamma.gamma(homogenity_n[3] + 1)));
 		w_max = (float) (Gamma.gamma(n + 1) / (Math.pow(Gamma.gamma((n + 1) / 4), 4)));
 		
 		homogeneity = w / w_max;
@@ -676,67 +418,21 @@ public class AestheticMeasureUtil
 	{
 		float rhythm;
 		float rhm_x, rhm_y, rhm_a;
-		float[] x, y, a;
 		float[] x_n, y_n, a_n;
-		
-		x = new float[4];
-		y = new float[4];
-		a = new float[4];
-		
-		for(LayoutComponent component: SmartLayout.components)
-		{
-			ComponentData data = componentDataMap.get(component);
-			
-			for(QuadrantData quadrantData: data.getQuadrants())
-			{
-				int quadrantIndex;
-				
-				switch(quadrantData.getQuadrantPosition())
-				{
-				case UL:
-					quadrantIndex = 0;
-					
-					break;
-					
-				case UR:
-					quadrantIndex = 1;
-					
-					break;
-					
-				case LL:
-					quadrantIndex = 2;
-
-					break;
-					
-				case LR:
-					quadrantIndex = 3;
-
-					break;
-					
-				default:
-					System.out.println("Error in rhythm measurement.");
-					
-					return -1;
-				}
-				
-				x[quadrantIndex] += Math.abs(quadrantData.getCenterX() - frameCenterX);
-				y[quadrantIndex] += Math.abs(quadrantData.getCenterY() - frameCenterY);
-				a[quadrantIndex] += quadrantData.getArea();
-			}
-		}
 
 		DecimalFormat df = new DecimalFormat("###.###");
 		df.setRoundingMode(RoundingMode.CEILING);
+		
 		for(int i = 0; i < 4; i++)
 		{
-			x[i] = Float.parseFloat(df.format(x[i]).replace(",", "."));
-			y[i] = Float.parseFloat(df.format(y[i]).replace(",", "."));
-			a[i] = Float.parseFloat(df.format(a[i]).replace(",", "."));
+			rhythm_x[i] = Float.parseFloat(df.format(rhythm_x[i]).replace(",", "."));
+			rhythm_y[i] = Float.parseFloat(df.format(rhythm_y[i]).replace(",", "."));
+			rhythm_a[i] = Float.parseFloat(df.format(rhythm_a[i]).replace(",", "."));
 		}
 		
-		x_n = Normalize(x);
-		y_n = Normalize(y);
-		a_n = Normalize(a);
+		x_n = Normalize(rhythm_x);
+		y_n = Normalize(rhythm_y);
+		a_n = Normalize(rhythm_a);
 		
 		rhm_x = (Math.abs(x_n[0] - x_n[1]) + Math.abs(x_n[0] - x_n[3]) + Math.abs(x_n[0] - x_n[2])
 			+ Math.abs(x_n[1] - x_n[3]) + Math.abs(x_n[1] - x_n[2]) + Math.abs(x_n[3] - x_n[2])) / 6;
@@ -779,6 +475,23 @@ public class AestheticMeasureUtil
 		datas = new ArrayList<ComponentData>();
 		maxAreas = new float[4];
 		maxAreas[0] = maxAreas[1] = maxAreas[2] = maxAreas[3] = 0;
+		
+		//Bağımsızların atamaları
+		equilibrium_centerFactors = new float[2];
+		symmetry_x = new float[4]; symmetry_y = new float[4];
+		symmetry_b = new float[4]; symmetry_h = new float[4];
+		symmetry_t = new float[4]; symmetry_r = new float[4];
+		sequence_w = new float[4];
+		float cohesion_frameRate = (float) frameHeight / (float) frameWidth;
+		float cohesion_layoutRate = (float) layoutHeight / (float) layoutWidth;
+		ArrayList<Coordinate> unity_sizes = new ArrayList<Coordinate>();
+		float[] proportion_p_j = {1f, 1/1.414f, 1/1.618f, 1/1.732f, 1/2f};
+		ArrayList<Integer> simplicity_allVaps = new ArrayList<Integer>();
+		ArrayList<Integer> simplicity_allHaps = new ArrayList<Integer>();
+		homogenity_n = new float[4];
+		rhythm_x = new float[4];
+		rhythm_y = new float[4];
+		rhythm_a = new float[4];
 		
 		for(LayoutComponent component: SmartLayout.components)
 		{
@@ -892,6 +605,180 @@ public class AestheticMeasureUtil
 			
 			componentDataMap.put(component, data);
 			datas.add(data);
+			
+			//Bağımsızların hesaplanması
+			equilibrium_totalComponentArea += data.getTotalArea();
+			equilibrium_centerFactors[0] += data.getTotalArea() * (data.getCenterX() - frameCenterX);
+			equilibrium_centerFactors[1] += data.getTotalArea() * (data.getCenterY() - frameCenterY);
+			
+			float cohesion_t_fo, cohesion_t_lo;
+			float cohesion_f_fo, cohesion_f_lo;
+			float objectRate = (float) component.getAssignedHeight() / (float) component.getAssignedWidth();
+			
+			cohesion_t_fo = objectRate / cohesion_frameRate;
+			cohesion_t_lo = objectRate / cohesion_layoutRate;
+			
+			if(cohesion_t_fo <= 1)
+				cohesion_f_fo = cohesion_t_fo;
+			else
+				cohesion_f_fo = 1 / cohesion_t_fo;
+			
+			if(cohesion_t_lo <= 1)
+				cohesion_f_lo = cohesion_t_lo;
+			else
+				cohesion_f_lo = 1 / cohesion_t_lo;
+			
+			cohesion_ffoSum += cohesion_f_fo;
+			cohesion_floSum += cohesion_f_lo;
+			
+			Coordinate size = new Coordinate(component.getAssignedWidth(), component.getAssignedHeight());
+			unity_sizes.add(size);
+			
+			float proportion_r_i = (float) component.getAssignedHeight() / (float) component.getAssignedWidth();
+			float proportion_p_i = proportion_r_i <= 1 ? proportion_r_i : 1 / proportion_r_i;
+			
+			float proportion_min_p = Float.POSITIVE_INFINITY;
+			
+			for(int i = 0; i < 5; i++)
+			{
+				float proportion_p = Math.abs(proportion_p_j[i] - proportion_p_i);
+				
+				if(proportion_p < proportion_min_p)
+					proportion_min_p = proportion_p;
+			}
+			
+			proportion_tempObjectTotal += 1 - proportion_min_p / 0.5f;
+			
+			simplicity_allVaps.add(component.getAssignedY());
+			simplicity_allVaps.add(component.getAssignedY() + component.getAssignedHeight());
+			simplicity_allHaps.add(component.getAssignedX());
+			simplicity_allHaps.add(component.getAssignedX() + component.getAssignedWidth());
+			
+			for(QuadrantData quadrantData: data.getQuadrants())
+			{
+				int quadrantIndex;
+				
+				switch(quadrantData.getQuadrantPosition())
+				{
+				case UL:
+					quadrantIndex = 0;
+					
+					break;
+					
+				case UR:
+					quadrantIndex = 1;
+					
+					break;
+					
+				case LL:
+					quadrantIndex = 2;
+
+					break;
+					
+				case LR:
+					quadrantIndex = 3;
+
+					break;
+					
+				default:
+					System.out.println("Error in symmetry measurement.");
+					
+					return;
+				}
+				
+				float centerDifferenceX = quadrantData.getCenterX() - frameCenterX;
+				float centerDifferenceY = quadrantData.getCenterY() - frameCenterY;
+				
+				symmetry_x[quadrantIndex] += Math.abs(centerDifferenceX);
+				symmetry_y[quadrantIndex] += Math.abs(centerDifferenceY);
+				symmetry_h[quadrantIndex] += quadrantData.getHeight();
+				symmetry_b[quadrantIndex] += quadrantData.getWidth();
+				symmetry_t[quadrantIndex] += Math.abs(centerDifferenceY / centerDifferenceX);
+				symmetry_r[quadrantIndex] += Math.sqrt(Math.pow(centerDifferenceX, 2) + Math.pow(centerDifferenceY, 2));
+				
+				sequence_w[quadrantIndex] += quadrantData.getArea();
+				
+				if(quadrantData.getQuadrantPosition() == QuadrantEnum.UL) { homogenity_n[0]++; }
+				else if(quadrantData.getQuadrantPosition() == QuadrantEnum.UR) { homogenity_n[1]++; }
+				else if(quadrantData.getQuadrantPosition() == QuadrantEnum.LL) { homogenity_n[2]++; }
+				else if(quadrantData.getQuadrantPosition() == QuadrantEnum.LR) { homogenity_n[3]++; }
+				
+				rhythm_x[quadrantIndex] += symmetry_x[quadrantIndex];
+				rhythm_y[quadrantIndex] += symmetry_y[quadrantIndex];
+				rhythm_a[quadrantIndex] += quadrantData.getArea();
+			}
+		}
+		
+		unity_totalAreas = equilibrium_totalComponentArea;
+		density_totalAreas = equilibrium_totalComponentArea;
+		
+		Collections.sort(unity_sizes);
+		Collections.sort(simplicity_allVaps);
+		Collections.sort(simplicity_allHaps);
+		
+		balance_w = new float[4];
+		
+		int unity_sizeCounter = 0;
+		int simplicity_counter = 0;
+		
+		for(LayoutComponent component: SmartLayout.components)
+		{
+			ComponentData data = componentDataMap.get(component);
+			
+			balance_w[0] += data.getLeftDistance() * (data.getLeftArea() / maxAreas[0]);
+			balance_w[1] += data.getRightDistance() * (data.getRightArea() / maxAreas[1]);
+			balance_w[2] += data.getTopDistance() * (data.getTopArea() / maxAreas[2]);
+			balance_w[3] += data.getBottomDistance() * (data.getBottomArea() / maxAreas[3]);
+			
+			if(unity_sizeCounter < unity_sizes.size() - 1)
+			{
+				if(unity_sizes.get(unity_sizeCounter).getX() != unity_sizes.get(unity_sizeCounter + 1).getX())
+				{
+					unity_sizeCount++;
+					economy_sizeCount++;
+				}
+				else
+				{
+					if(unity_sizes.get(unity_sizeCounter).getY() != unity_sizes.get(unity_sizeCounter + 1).getY())
+					{
+						unity_sizeCount++;
+						economy_sizeCount++;
+					}
+				}
+			}
+			
+			if(simplicity_counter < simplicity_allVaps.size() - 1)
+			{
+				if(simplicity_allVaps.get(simplicity_counter) != simplicity_allVaps.get(simplicity_counter + 1))
+				{
+					simplicity_n_vap++;
+					regularity_n_vap++;
+				}
+
+				if(simplicity_allHaps.get(simplicity_counter) != simplicity_allHaps.get(simplicity_counter + 1))
+				{
+					simplicity_n_hap++;
+					regularity_n_hap++;
+				}
+			}
+			
+			if(simplicity_counter < simplicity_allVaps.size() - 2)
+			{
+				if(simplicity_allVaps.get(simplicity_counter + 1) != simplicity_allVaps.get(simplicity_counter + 2))
+				{
+					simplicity_n_vap++;
+					regularity_n_vap++;
+				}
+
+				if(simplicity_allHaps.get(simplicity_counter + 1) != simplicity_allHaps.get(simplicity_counter + 2))
+				{
+					simplicity_n_hap++;
+					regularity_n_hap++;
+				}
+			}
+			
+			unity_sizeCounter++;
+			simplicity_counter += 2;
 		}
 	}
 	
