@@ -320,21 +320,6 @@ public class LayoutContainer implements Layoutable
 		Integer[] indexOrder = comparator.createIndexArray();
 		Arrays.sort(indexOrder, comparator);
 		
-		/*for (int i = 0; i < capacityValues.length; i++)
-		{
-			int addValue;
-			
-			if(capacityValues[indexOrder[i]] <= remaining)
-				addValue = capacityValues[indexOrder[i]];
-			else
-				addValue = remaining;
-			
-			distribution[indexOrder[i]] += addValue;
-			remaining -= addValue;
-			
-			if (remaining <= 0) { break; }
-		}*/
-		
 		while (remaining > 0)
 		{
 			if(remaining < indexOrder.length)

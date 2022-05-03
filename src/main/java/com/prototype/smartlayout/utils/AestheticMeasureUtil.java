@@ -2,28 +2,17 @@ package com.prototype.smartlayout.utils;
 
 import com.prototype.smartlayout.SmartLayout;
 import com.prototype.smartlayout.aesthetic.ComponentData;
-import com.prototype.smartlayout.aesthetic.QuadrantData;
-import com.prototype.smartlayout.aesthetic.QuadrantEnum;
 import com.prototype.smartlayout.model.Coordinate;
 import com.prototype.smartlayout.model.LayoutComponent;
-import com.prototype.smartlayout.model.LayoutContainer;
-import com.prototype.smartlayout.model.Layoutable;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Vector;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.log4j.Log4j2;
 
 import org.apache.commons.math3.special.Gamma;
 
@@ -31,7 +20,6 @@ import org.apache.commons.math3.special.Gamma;
  * These measures does not include color shape etc.
  * formulas gained from <site>http://www.mi.sanu.ac.rs/vismath/ngo/index.html</site>
  */
-@Log4j2
 public class AestheticMeasureUtil
 {
 	public static AestheticMeasureUtil aestheticMeasure;
@@ -52,71 +40,88 @@ public class AestheticMeasureUtil
 			1, //c_rhythm
 	};
 	
-	private HashMap<LayoutComponent, ComponentData> componentDataMap;
-	private ArrayList<ComponentData> datas; //Array yapılabilir -> Boyut: components.size()
-	private float[] maxAreas;
+	public HashMap<LayoutComponent, ComponentData> componentDataMap;
+	public ArrayList<ComponentData> datas;
+	public float[] maxAreas;
 	
-	private int componentSize;
+	public float cohesion_frameRate;
+	public float cohesion_layoutRate;
 	
-	private int frameWidth;
-	private int frameHeight;
-	private int frameCenterX;
-	private int frameCenterY;
+	public float[] proportion_p_j = {1f, 1/1.414f, 1/1.618f, 1/1.732f, 1/2f};
+
+	public ArrayList<Coordinate> unity_sizes = new ArrayList<Coordinate>();
+	public ArrayList<Integer> simplicity_allVaps = new ArrayList<Integer>();
+	public ArrayList<Integer> simplicity_allHaps = new ArrayList<Integer>();
 	
-	private int layoutWidth;
-	private int layoutHeight;
+	public int componentSize;
+	
+	public int frameWidth;
+	public int frameHeight;
+	public int frameCenterX;
+	public int frameCenterY;
+	
+	public int layoutWidth;
+	public int layoutHeight;
 	
 	private float[] balance_w;
-	private float equilibrium_totalComponentArea;
-	private float[] equilibrium_centerFactors;
-	private float[] symmetry_x, symmetry_y, symmetry_h, symmetry_b, symmetry_t, symmetry_r;
-	private float[] sequence_w;
-	private float cohesion_ffoSum, cohesion_floSum;
-	private float unity_totalAreas, unity_sizeCount;
-	private float proportion_tempObjectTotal;
-	private float simplicity_n_vap, simplicity_n_hap;
-	private float density_totalAreas;
-	private float regularity_n_vap, regularity_n_hap;
-	private float economy_sizeCount;
-	private float[] homogenity_n;
-	private float[] rhythm_x, rhythm_y, rhythm_a;
+	public float equilibrium_totalComponentArea;
+	public float[] equilibrium_centerFactors;
+	public float[] symmetry_x, symmetry_y, symmetry_h, symmetry_b, symmetry_t, symmetry_r;
+	public float[] sequence_w;
+	public float cohesion_ffoSum, cohesion_floSum;
+	public float unity_totalAreas, unity_sizeCount;
+	public float proportion_tempObjectTotal;
+	public float simplicity_n_vap, simplicity_n_hap;
+	public float density_totalAreas;
+	public float regularity_n_vap, regularity_n_hap;
+	public float economy_sizeCount;
+	public float[] homogenity_n;
+	public float[] rhythm_x, rhythm_y, rhythm_a;
 	
-	public AestheticMeasureUtil()
+	public AestheticMeasureUtil(int frameWidth, int frameHeight, int layoutWidth, int layoutHeight)
 	{
+		aestheticMeasure = this;
+		
+		componentSize = SmartLayout.components.size();
+		
+		this.frameWidth = frameWidth;
+		this.frameHeight = frameHeight;
+		this.frameCenterX = frameWidth / 2;
+		this.frameCenterY = frameHeight / 2;
+		
+		this.layoutWidth = layoutWidth;
+		this.layoutHeight = layoutHeight;
+		
+		cohesion_frameRate = (float) frameHeight / (float) frameWidth;
+		cohesion_layoutRate = (float) layoutHeight / (float) layoutWidth;
+		
+		componentDataMap = new HashMap<LayoutComponent, ComponentData>();
 		datas = new ArrayList<ComponentData>();
+		maxAreas = new float[4];
+		maxAreas[0] = maxAreas[1] = maxAreas[2] = maxAreas[3] = 0;
+
+		unity_sizeCount = 1;
+		simplicity_n_vap = simplicity_n_hap = 1;
+		regularity_n_vap = regularity_n_hap = 1;
+		economy_sizeCount = 1;
+		
 		balance_w = new float[4];
 		equilibrium_centerFactors = new float[2];
 		symmetry_x = new float[4]; symmetry_y = new float[4];
 		symmetry_b = new float[4]; symmetry_h = new float[4];
 		symmetry_t = new float[4]; symmetry_r = new float[4];
 		sequence_w = new float[4];
-		unity_sizeCount = 1;
-		simplicity_n_vap = simplicity_n_hap = 1;
-		regularity_n_vap = regularity_n_hap = 1;
-		economy_sizeCount = 1;
 		homogenity_n = new float[4];
 		rhythm_x = new float[4];
 		rhythm_y = new float[4];
 		rhythm_a = new float[4];
 	}
 	
-	public static float MeasureAesthetics(int frameWidth, int frameHeight, int layoutWidth, int layoutHeight)
+	public float MeasureAesthetics()
 	{
 		//return 1;
 		
-		aestheticMeasure = new AestheticMeasureUtil();
-		
-		aestheticMeasure.componentSize = SmartLayout.components.size();
-		
-		aestheticMeasure.frameWidth = frameWidth;
-		aestheticMeasure.frameHeight = frameHeight;
-		aestheticMeasure.frameCenterX = frameWidth / 2;
-		aestheticMeasure.frameCenterY = frameHeight / 2;
-		
-		aestheticMeasure.layoutWidth = layoutWidth;
-		aestheticMeasure.layoutHeight = layoutHeight;
-		
-		aestheticMeasure.CalculateComponentAreas();
+		CalculateComponentAreas();
 		
 		float m_balance = aestheticMeasure.MeasureBalance();
 		float m_equilibrium = aestheticMeasure.MeasureEquilibrium();
@@ -471,253 +476,6 @@ public class AestheticMeasureUtil
 	
 	private void CalculateComponentAreas()
 	{
-		componentDataMap = new HashMap<LayoutComponent, ComponentData>();
-		datas = new ArrayList<ComponentData>();
-		maxAreas = new float[4];
-		maxAreas[0] = maxAreas[1] = maxAreas[2] = maxAreas[3] = 0;
-		
-		//Bağımsızların atamaları
-		equilibrium_centerFactors = new float[2];
-		symmetry_x = new float[4]; symmetry_y = new float[4];
-		symmetry_b = new float[4]; symmetry_h = new float[4];
-		symmetry_t = new float[4]; symmetry_r = new float[4];
-		sequence_w = new float[4];
-		float cohesion_frameRate = (float) frameHeight / (float) frameWidth;
-		float cohesion_layoutRate = (float) layoutHeight / (float) layoutWidth;
-		ArrayList<Coordinate> unity_sizes = new ArrayList<Coordinate>();
-		float[] proportion_p_j = {1f, 1/1.414f, 1/1.618f, 1/1.732f, 1/2f};
-		ArrayList<Integer> simplicity_allVaps = new ArrayList<Integer>();
-		ArrayList<Integer> simplicity_allHaps = new ArrayList<Integer>();
-		homogenity_n = new float[4];
-		rhythm_x = new float[4];
-		rhythm_y = new float[4];
-		rhythm_a = new float[4];
-		
-		for(LayoutComponent component: SmartLayout.components)
-		{
-			float totalArea, leftArea, rightArea, topArea, bottomArea;
-			float distance, horizontalDistance, verticalDistance, leftDistance, rightDistance, topDistance, bottomDistance;
-			
-			float left, right, top, bottom, width, height;
-			float centerX, centerY;
-			
-			width = component.getAssignedWidth();
-			height = component.getAssignedHeight();
-			
-			left = component.getAssignedX();
-			right = left + width;
-			top = component.getAssignedY();
-			bottom = top + height;
-			
-			centerX = (right + left) / 2;
-			centerY = (bottom + top) / 2;
-			
-			if(left < frameCenterX)
-			{
-				if(right < frameCenterX)
-				{
-					leftArea = width * height;
-					rightArea = 0;
-					
-					leftDistance = frameCenterX - centerX;
-					rightDistance = 0;
-				}
-				else
-				{
-					float leftWidth = frameCenterX - left;
-					float rightWidth = right - frameCenterX;
-					
-					leftArea = leftWidth * height;
-					rightArea = rightWidth * height;
-					
-					float leftCenterX = (frameCenterX + left) / 2;
-					float rightCenterX = (frameCenterX + right) / 2;
-					
-					leftDistance = frameCenterX - leftCenterX;
-					rightDistance = rightCenterX - frameCenterX;
-				}
-			}
-			else
-			{
-				leftArea = 0;
-				rightArea = width * height;
-				
-				leftDistance = 0;
-				rightDistance = centerX - frameCenterX;
-			}
-			
-			if(top < frameCenterY)
-			{
-				if(bottom < frameCenterY)
-				{
-					topArea = width * height;
-					bottomArea = 0;
-					
-					topDistance = frameCenterY - centerY;
-					bottomDistance = 0;
-				}
-				else
-				{
-					float topHeight = frameCenterY - top;
-					float bottomHeight = bottom - frameCenterY;
-					
-					topArea = width * topHeight;
-					bottomArea = width * bottomHeight;
-					
-					float topCenterY = (frameCenterY + top) / 2;
-					float bottomCenterY = (frameCenterY + bottom) / 2;
-					
-					topDistance = frameCenterY - topCenterY;
-					bottomDistance = bottomCenterY - frameCenterY;
-				}
-			}
-			else
-			{
-				topArea = 0;
-				bottomArea = width * height;
-				
-				topDistance = 0;
-				bottomDistance = centerY - frameCenterY;
-			}
-			
-			if(maxAreas[0] < leftArea)
-				maxAreas[0] = leftArea;
-			
-			if(maxAreas[1] < rightArea)
-				maxAreas[1] = rightArea;
-			
-			if(maxAreas[2] < topArea)
-				maxAreas[2] = topArea;
-			
-			if(maxAreas[3] < bottomArea)
-				maxAreas[3] = bottomArea;
-			
-			totalArea = leftArea + rightArea;
-			horizontalDistance = Math.abs(frameCenterX - centerX);
-			verticalDistance = Math.abs(frameCenterY - centerY);
-			distance = (float) Math.sqrt(Math.pow(horizontalDistance, 2) + Math.pow(verticalDistance, 2));
-			
-			ComponentData data = new ComponentData(totalArea, leftArea, rightArea, topArea, bottomArea, distance, horizontalDistance,
-					verticalDistance, leftDistance, rightDistance, topDistance, bottomDistance, centerX, centerY);
-			
-			data.SetComponent(component);
-			data.CalculateQuadrants(frameCenterX, frameCenterY);
-			
-			componentDataMap.put(component, data);
-			datas.add(data);
-			
-			//Bağımsızların hesaplanması
-			equilibrium_totalComponentArea += data.getTotalArea();
-			equilibrium_centerFactors[0] += data.getTotalArea() * (data.getCenterX() - frameCenterX);
-			equilibrium_centerFactors[1] += data.getTotalArea() * (data.getCenterY() - frameCenterY);
-			
-			float cohesion_t_fo, cohesion_t_lo;
-			float cohesion_f_fo, cohesion_f_lo;
-			float objectRate = (float) component.getAssignedHeight() / (float) component.getAssignedWidth();
-			
-			cohesion_t_fo = objectRate / cohesion_frameRate;
-			cohesion_t_lo = objectRate / cohesion_layoutRate;
-			
-			if(cohesion_t_fo <= 1)
-				cohesion_f_fo = cohesion_t_fo;
-			else
-				cohesion_f_fo = 1 / cohesion_t_fo;
-			
-			if(cohesion_t_lo <= 1)
-				cohesion_f_lo = cohesion_t_lo;
-			else
-				cohesion_f_lo = 1 / cohesion_t_lo;
-			
-			cohesion_ffoSum += cohesion_f_fo;
-			cohesion_floSum += cohesion_f_lo;
-			
-			Coordinate size = new Coordinate(component.getAssignedWidth(), component.getAssignedHeight());
-			unity_sizes.add(size);
-			
-			float proportion_r_i = (float) component.getAssignedHeight() / (float) component.getAssignedWidth();
-			float proportion_p_i = proportion_r_i <= 1 ? proportion_r_i : 1 / proportion_r_i;
-			
-			float proportion_min_p = Float.POSITIVE_INFINITY;
-			
-			for(int i = 0; i < 5; i++)
-			{
-				float proportion_p = Math.abs(proportion_p_j[i] - proportion_p_i);
-				
-				if(proportion_p < proportion_min_p)
-					proportion_min_p = proportion_p;
-			}
-			
-			proportion_tempObjectTotal += 1 - proportion_min_p / 0.5f;
-			
-			simplicity_allVaps.add(component.getAssignedY());
-			simplicity_allVaps.add(component.getAssignedY() + component.getAssignedHeight());
-			simplicity_allHaps.add(component.getAssignedX());
-			simplicity_allHaps.add(component.getAssignedX() + component.getAssignedWidth());
-			
-			for(QuadrantData quadrantData: data.getQuadrants())
-			{
-				int quadrantIndex;
-				
-				switch(quadrantData.getQuadrantPosition())
-				{
-				case UL:
-					quadrantIndex = 0;
-					
-					break;
-					
-				case UR:
-					quadrantIndex = 1;
-					
-					break;
-					
-				case LL:
-					quadrantIndex = 2;
-
-					break;
-					
-				case LR:
-					quadrantIndex = 3;
-
-					break;
-					
-				default:
-					System.out.println("Error in symmetry measurement.");
-					
-					return;
-				}
-				
-				float centerDifferenceX = quadrantData.getCenterX() - frameCenterX;
-				float centerDifferenceY = quadrantData.getCenterY() - frameCenterY;
-				
-				symmetry_x[quadrantIndex] += Math.abs(centerDifferenceX);
-				symmetry_y[quadrantIndex] += Math.abs(centerDifferenceY);
-				symmetry_h[quadrantIndex] += quadrantData.getHeight();
-				symmetry_b[quadrantIndex] += quadrantData.getWidth();
-				symmetry_t[quadrantIndex] += Math.abs(centerDifferenceY / centerDifferenceX);
-				symmetry_r[quadrantIndex] += Math.sqrt(Math.pow(centerDifferenceX, 2) + Math.pow(centerDifferenceY, 2));
-				
-				sequence_w[quadrantIndex] += quadrantData.getArea();
-				
-				if(quadrantData.getQuadrantPosition() == QuadrantEnum.UL) { homogenity_n[0]++; }
-				else if(quadrantData.getQuadrantPosition() == QuadrantEnum.UR) { homogenity_n[1]++; }
-				else if(quadrantData.getQuadrantPosition() == QuadrantEnum.LL) { homogenity_n[2]++; }
-				else if(quadrantData.getQuadrantPosition() == QuadrantEnum.LR) { homogenity_n[3]++; }
-				
-				rhythm_x[quadrantIndex] += symmetry_x[quadrantIndex];
-				rhythm_y[quadrantIndex] += symmetry_y[quadrantIndex];
-				rhythm_a[quadrantIndex] += quadrantData.getArea();
-			}
-		}
-		
-		unity_totalAreas = equilibrium_totalComponentArea;
-		density_totalAreas = equilibrium_totalComponentArea;
-		
-		Collections.sort(unity_sizes);
-		Collections.sort(simplicity_allVaps);
-		Collections.sort(simplicity_allHaps);
-		
-		balance_w = new float[4];
-		
 		int unity_sizeCounter = 0;
 		int simplicity_counter = 0;
 		

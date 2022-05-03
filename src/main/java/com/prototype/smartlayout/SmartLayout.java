@@ -292,6 +292,8 @@ public class SmartLayout extends JFrame
 				layoutWidth = width;
 			
 			fillers.clear();
+			
+			AestheticMeasureUtil measurement = new AestheticMeasureUtil(width, height, layoutWidth, layoutHeight);
 
 			//long startTime2, elapsedTime2;
 			//startTime2 = System.nanoTime();
@@ -302,7 +304,7 @@ public class SmartLayout extends JFrame
 			//System.out.println("TEST AESTHETICS - Get Layout Time: " + elapsedTime2);
 			
 			
-			float aesthetics = AestheticMeasureUtil.MeasureAesthetics(width, height, layoutWidth, layoutHeight);
+			float aesthetics = measurement.MeasureAesthetics();
 			
 			if(aesthetics > maxAesthetics)
 			{

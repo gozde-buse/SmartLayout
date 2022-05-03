@@ -38,7 +38,7 @@ public class Controller extends JFrame
 		controller.CreateControlPanel();
 		
 		test = new TestScenario();
-		controller.layout = test.SchengenVisa31CompApplicationForm();
+		controller.layout = test.SchengenVisa51CompApplicationForm();
 	}
 	
 	private void CreateControlPanel()
